@@ -109,6 +109,7 @@ int test_indirect()
     }
 
     for (j = 0; j < 10; j++) {
+        printf("-----loop%d--------",j);
         for (i = 0; i < FILE_NUM; i++) {
             memset(temp, 0, LARGE_FILE_SIZE_MAX);
             size = (rand() % (LARGE_FILE_SIZE_MAX - LARGE_FILE_SIZE_MIN)) + LARGE_FILE_SIZE_MIN;
@@ -124,14 +125,23 @@ int test_indirect()
         }
 
         for (i = 0; i < FILE_NUM; i++) {
+
             std::string buf;
             if (ec->get(id_list[i], buf) != extent_protocol::OK) {
                 printf("error get, return not OK\n");
                 return 2;
             }
             if (buf.compare(content[i]) != 0) {
-                std::cout << "error get large file, not consistent with put large file : " << 
-                    buf << " <-> " << content[i] << "\n";
+                std::cout << "error get large file, not consistent with put large file : \n" << 
+                    buf << "\n" << " <-> " << "\n" << content[i] << "\n";
+                    std::cout<<std::endl;
+                    std::cout<<buf.size()<<" "<<content[i].size()<<std::endl;
+                    if(buf.size()>100&&content[i].size())
+                    {
+
+                        std::cout<<buf.substr(buf.size()-100,100) << "\n" << " <-> " << "\n" << content[i].substr(content[i].size()-100,100) << "\n";
+                    }
+                    //check last 512!!!
                 return 3;
             }
         }

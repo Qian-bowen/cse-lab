@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 #include "extent_protocol.h" // TODO: delete it
+#include <map>
+
 
 #define DISK_SIZE  1024*1024*16
 #define BLOCK_SIZE 512
@@ -40,7 +42,13 @@ class block_manager {
   block_manager();
   struct superblock sb;
 
+  bool is_block_free(uint32_t id);
+  void set_block_in_bitmap(uint32_t id);
+  void unset_block_in_bitmap(uint32_t id);
+  void indirect_free_block(uint32_t id,unsigned int size);
+
   uint32_t alloc_block();
+  uint32_t alloc_data_block();
   void free_block(uint32_t id);
   void read_block(uint32_t id, char *buf);
   void write_block(uint32_t id, const char *buf);
@@ -81,6 +89,7 @@ class inode_manager {
   block_manager *bm;
   struct inode* get_inode(uint32_t inum);
   void put_inode(uint32_t inum, struct inode *ino);
+  int test_cnt=0;
 
  public:
   inode_manager();
