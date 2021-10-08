@@ -99,6 +99,7 @@ class inode_manager {
   void write_file(uint32_t inum, const char *buf, int size);
   void remove_file(uint32_t inum);
   void getattr(uint32_t inum, extent_protocol::attr &a);
+  void setattr(uint32_t inum, extent_protocol::attr a);
 };
 
 #endif

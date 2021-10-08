@@ -125,10 +125,15 @@ fuseserver_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
     if (FUSE_SET_ATTR_SIZE & to_set) {
         printf("   fuseserver_setattr set size to %zu\n", attr->st_size);
 
-#if 0
+#if 1
     struct stat st;
     // Change the above line to "#if 1", and your code goes here
     // Note: fill st using getattr before fuse_reply_attr
+    getattr(ino,st);
+    chfs->setattr(ino,attr->st_size);
+    st.st_size=attr->st_size;
+    fuse_reply_attr(req,&st,7200);
+    
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -154,8 +159,20 @@ void
 fuseserver_read(fuse_req_t req, fuse_ino_t ino, size_t size,
         off_t off, struct fuse_file_info *fi)
 {
-#if 0
+#if 1
     // Change the above "#if 0" to "#if 1", and your code goes here
+    struct stat st;
+    getattr(ino,st);
+    std::string buf;
+    int file_size=st.st_size;
+    printf("read file size:%d\n",file_size);
+    if(off>=file_size) {
+        fuse_reply_buf(req,buf.c_str(),0);
+        return;
+    }
+    int size_to_read=size>=(file_size-off)?(file_size-off):size;
+    chfs->read(ino,size_to_read,off,buf);
+    fuse_reply_buf(req,buf.c_str(),size);
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -183,8 +200,13 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
         const char *buf, size_t size, off_t off,
         struct fuse_file_info *fi)
 {
-#if 0
+#if 1
     // Change the above line to "#if 1", and your code goes here
+    printf("fuse write begin\n");
+    size_t bytes_written=0;
+    chfs->write(ino,size,off,buf,bytes_written);
+    fuse_reply_write(req,size);
+
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -212,6 +234,7 @@ chfs_client::status
 fuseserver_createhelper(fuse_ino_t parent, const char *name,
         mode_t mode, struct fuse_entry_param *e, int type)
 {
+    // printf("fuseserver_createhelper\n");
     int ret;
     // In chfs, timeouts are always set to 0.0, and generations are always set to 0
     e->attr_timeout = 0.0;
@@ -359,6 +382,7 @@ void
 fuseserver_open(fuse_req_t req, fuse_ino_t ino,
         struct fuse_file_info *fi)
 {
+    chfs->increase_time_of_dir_file(ino);
     fuse_reply_open(req, fi);
 }
 
@@ -384,8 +408,23 @@ fuseserver_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
     // Suppress compiler warning of unused e.
     (void) e;
 
-#if 0
+#if 1
     // Change the above line to "#if 1", and your code goes here
+    chfs_client::status ret=fuseserver_createhelper(parent,name,mode,&e,extent_protocol::T_DIR);
+
+
+    if(ret==chfs_client::OK)
+    {
+        fuse_reply_entry(req,&e);
+    }
+    else
+    {
+        if(ret==chfs_client::EXIST)
+            fuse_reply_err(req,EEXIST);
+        else
+            fuse_reply_err(req,ENOENT);
+    }
+    
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -427,6 +466,80 @@ fuseserver_statfs(fuse_req_t req)
     buf.f_bsize = 512;
 
     fuse_reply_statfs(req, &buf);
+}
+
+/**
+ * Create a symbolic link
+ *
+ * Valid replies:
+ *   fuse_reply_entry
+ *   fuse_reply_err
+ *
+ * @param req request handle
+ * @param link the contents of the symbolic link
+ * @param parent inode number of the parent directory
+ * @param name to create
+ */
+//create symbolic link:/etc/hosts name:hosts
+//maybe some err with name
+void 
+fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
+			 const char *name)
+{
+    std::cout<<"fuse create symbolic"<<std::endl;
+    struct fuse_entry_param e;
+    e.attr_timeout = 0.0;
+    e.entry_timeout = 0.0;
+    e.generation = 0;
+    (void) e;
+
+    chfs_client::inum ino;
+    chfs_client::status ret=chfs->create_symbolic_link(parent,link,name,ino);
+
+
+    if(ret==chfs_client::OK)
+    {
+        std::cout<<"ok1 create symbolic"<<std::endl;
+        e.ino=ino;
+        fuse_reply_entry(req,&e);
+        std::cout<<"ok2 create symbolic"<<std::endl;
+    }
+    else
+    {
+        if(ret==chfs_client::EXIST)
+            fuse_reply_err(req,EEXIST);
+        else
+            fuse_reply_err(req,ENOENT);
+    }
+}
+
+
+/**
+ * Read symbolic link
+ *
+ * Valid replies:
+ *   fuse_reply_readlink
+ *   fuse_reply_err
+ *
+ * @param req request handle
+ * @param ino the inode number
+ */
+void 
+fuseserver_readlink(fuse_req_t req, fuse_ino_t ino)
+{
+    std::cout<<"fuse read symbolic"<<std::endl;
+    std::string link;
+    chfs_client::status ret=chfs->readlink(ino,link);
+
+
+    if(ret!=chfs_client::OK)
+    {
+        fuse_reply_err(req,ENOENT);
+        return;
+    }
+    std::cout<<"ok1 read symbolic"<<std::endl;
+    fuse_reply_readlink(req,link.c_str());
+    std::cout<<"ok2 read symbolic"<<std::endl;
 }
 
 struct fuse_lowlevel_ops fuseserver_oper;
@@ -471,11 +584,16 @@ main(int argc, char *argv[])
     fuseserver_oper.setattr    = fuseserver_setattr;
     fuseserver_oper.unlink     = fuseserver_unlink;
     fuseserver_oper.mkdir      = fuseserver_mkdir;
+
+
     /** Your code here for Lab.
      * you may want to add
      * routines here to implement symbolic link,
      * rmdir, etc.
      * */
+    fuseserver_oper.symlink    = fuseserver_symlink;
+    fuseserver_oper.readlink    = fuseserver_readlink;
+
 
     const char *fuse_argv[20];
     int fuse_argc = 0;

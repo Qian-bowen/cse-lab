@@ -19,7 +19,7 @@ disk::read_block(blockid_t id, char *buf)
 void
 disk::write_block(blockid_t id, const char *buf)
 {
-  printf("write block id:%d$\n",id);
+  // printf("write block id:%d$\n",id);
   char* dst=(char*)blocks[id];
   memcpy(dst,buf,BLOCK_SIZE);
 }
@@ -74,7 +74,7 @@ block_manager::indirect_free_block(uint32_t id,unsigned int size)
   int len=sizeof(blockid_t),cursor=0;
   for(;cursor<size*len&&cursor<BLOCK_SIZE;cursor+=len)
   {
-    printf("indirec free num:%d\n",cursor/len);
+    // printf("indirec free num:%d\n",cursor/len);
     uint32_t tmp_id;
     memcpy(&tmp_id,tmp+cursor,len);
     free_block(tmp_id);
@@ -100,11 +100,11 @@ block_manager::alloc_block()
     {
       //set bitmap
       set_block_in_bitmap(i);
-      printf("allocate block:%d\n",i);
+      // printf("allocate block:%d\n",i);
       return i;
     }
   }
-
+  // printf("block not enough\n");
   return 0;
 }
 
@@ -119,7 +119,7 @@ block_manager::alloc_data_block()
     {
       //set bitmap
       set_block_in_bitmap(i);
-      printf("allocate data block:%d\n",i);
+      // printf("allocate data block:%d\n",i);
       return i;
     }
   }
@@ -371,9 +371,8 @@ inode_manager::write_file(uint32_t inum, const char *buf, int size)
     if(cursor>=min_size) block_id=bm->alloc_data_block();
     else block_id=node->blocks[index];
 
-    char tmp[BLOCK_SIZE+1];
+    char tmp[BLOCK_SIZE];
     memcpy(tmp,buf+cursor,BLOCK_SIZE);
-    tmp[BLOCK_SIZE]='\0';
     bm->write_block(block_id,tmp);
     node->blocks[index]=block_id;
     // printf("write direct id:%d index:%d\n",block_id, index);//test
@@ -486,6 +485,23 @@ inode_manager::getattr(uint32_t inum, extent_protocol::attr &a)
 }
 
 void
+inode_manager::setattr(uint32_t inum, extent_protocol::attr a)
+{
+  struct inode* node=get_inode(inum);
+  // printf("get attr atime:%d\n",node->atime);
+  if(node!=NULL)
+  {
+    node->atime=a.atime;
+    node->ctime=a.ctime;
+    node->mtime=a.mtime;
+    node->size=a.size;
+    node->type=a.type;
+  }
+  put_inode(inum,node);
+  return;
+}
+
+void
 inode_manager::remove_file(uint32_t inum)
 {
   /*
@@ -497,7 +513,7 @@ inode_manager::remove_file(uint32_t inum)
   blockid_t* blocks=node->blocks;
 
   unsigned int block_num=(size+BLOCK_SIZE)/BLOCK_SIZE;
-  printf("remove file:%d\n",inum);//
+  // printf("remove file:%d\n",inum);//
   // printf("block 0:%d\n",blocks[0]);//
   if(block_num<=NDIRECT)
   {
