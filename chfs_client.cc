@@ -214,7 +214,11 @@ chfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out)
     //check file whether exist
     bool found=false;
     inum tmp_inode;
-    lookup(parent,name,found,tmp_inode);
+    if(OK!=lookup(parent,name,found,tmp_inode))
+    {
+        printf("create look up error\n");
+        return NOENT;
+    }
     if(found==true)
     {
         printf("file already exist\n");
@@ -260,7 +264,11 @@ chfs_client::mkdir(inum parent, const char *name, mode_t mode, inum &ino_out)
 
     bool found=false;
     inum tmp_inode;
-    lookup(parent,name,found,tmp_inode);
+    if(OK!=lookup(parent,name,found,tmp_inode))
+    {
+        printf("mkdir lookup error\n");
+        return NOENT;
+    }
     if(found==true)
     {
         printf("dir already exist\n");
@@ -288,7 +296,7 @@ chfs_client::mkdir(inum parent, const char *name, mode_t mode, inum &ino_out)
 
 /*
 directory format
-|<--inode_num-->|/|<--name-->|\0|/|
+|<--inode_num-->|//|<--name-->|\0|//|
 */
 int
 chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
@@ -301,9 +309,10 @@ chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
      * you should design the format of directory content.
      */
     printf("look up begin\n");
-    printf("look up name:%s\n",name);
+    printf("look up name:%s parent:%lld\n",name,parent);
     if(!isdir(parent))
     {
+        printf("look up parent is not dir\n");
         return NOENT;
     }
     std::string dir_buf="";
@@ -351,7 +360,7 @@ chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
     }
     found=false;
     printf("look up end\n");
-    return NOENT;
+    return r;
 }
 
 int
@@ -545,16 +554,18 @@ int chfs_client::unlink(inum parent,const char *name)
 
 int chfs_client::create_symbolic_link(inum parent,const char *link,const char *name,inum & ino)
 {
-    printf("create symbolic link:%s name:%s\n",link,name);
+    printf("create symbolic link:%s name:%s parent:%lld\n",link,name,parent);
     bool found=false;
     inum tmp_inode;
 
-    //check is dir
-    if(!isdir(parent))
-        return NOENT;
+
 
     //look up
-    lookup(parent,name,found,tmp_inode);
+    if(OK!=lookup(parent,name,found,tmp_inode))
+    {
+        printf("symbolic link look up error\n");
+        return NOENT;
+    }
     if(found==true)
     {
         printf("symbolic link already exist\n");
@@ -562,24 +573,34 @@ int chfs_client::create_symbolic_link(inum parent,const char *link,const char *n
     }
 
     if(OK!=ec->create(extent_protocol::T_SYMLINK,ino))
-        return NOENT;
+    {
+        printf("symbolic create error\n");
+        return IOERR;
+    }
 
-    ec->put(ino,link);
+    printf("symbolic create success ino:%d\n",ino);
+
+    if(OK!=ec->put(ino,std::string(link)))
+    {
+        return IOERR;
+    }
 
     //modify parent info
     std::string dir_buf="";
     if(OK!=ec->get(parent,dir_buf))
-        return NOENT;
+        return IOERR;
 
     dir_buf+=make_dir_entry(ino,std::string(name));
 
-    std::cout<<"dir buf:"<<dir_buf<<std::endl;
+    std::cout<<"make dir buf:"<<dir_buf<<std::endl;
 
     //write back
     if(OK!=ec->put(parent,dir_buf))
-        return NOENT;
+        return IOERR;
 
     increase_time_of_dir_file(parent);
+
+    printf("create symbolic link end\n");
 
     return OK;
 }

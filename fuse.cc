@@ -58,7 +58,7 @@ getattr(chfs_client::inum inum, struct stat &st)
         st.st_ctime = info.ctime;
         st.st_size = info.size;
         printf("   getattr -> %llu\n", info.size);
-    } else {
+    } else if(chfs->isdir(inum)){
         chfs_client::dirinfo info;
         ret = chfs->getdir(inum, info);
         if(ret != chfs_client::OK)
@@ -69,6 +69,19 @@ getattr(chfs_client::inum inum, struct stat &st)
         st.st_mtime = info.mtime;
         st.st_ctime = info.ctime;
         printf("   getattr -> %lu %lu %lu\n", info.atime, info.mtime, info.ctime);
+    }
+    else {
+        chfs_client::fileinfo info;
+        ret = chfs->getfile(inum, info);
+        if(ret != chfs_client::OK)
+            return ret;
+        st.st_mode = S_IFLNK | 0777;
+        st.st_nlink = 1;
+        st.st_atime = info.atime;
+        st.st_mtime = info.mtime;
+        st.st_ctime = info.ctime;
+        st.st_size = info.size;
+        printf("   getattr -> link %llu\n", info.size);
     }
     return chfs_client::OK;
 }
@@ -294,6 +307,7 @@ void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent,
 void
 fuseserver_lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
+    printf("look up from fuse\n");
     struct fuse_entry_param e;
     // In chfs, timeouts are always set to 0.0, and generations are always set to 0
     e.attr_timeout = 0.0;
@@ -301,8 +315,18 @@ fuseserver_lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
     e.generation = 0;
     bool found = false;
 
-     chfs_client::inum ino;
-     chfs->lookup(parent, name, found, ino);
+    chfs_client::inum ino;
+    chfs_client::status ret=chfs->lookup(parent, name, found, ino);
+    if(chfs_client::OK!=ret)
+    {
+        if (ret == chfs_client::EXIST) {
+            fuse_reply_err(req, EEXIST);
+            return;
+        }else{
+            fuse_reply_err(req, ENOENT);
+            return;
+        }
+    }
 
     if (found) {
         e.ino = ino;
@@ -486,7 +510,7 @@ void
 fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
 			 const char *name)
 {
-    std::cout<<"fuse create symbolic"<<std::endl;
+    std::cout<<"fuse create symbolic link:"<<link<<" name:"<<name<<std::endl;
     struct fuse_entry_param e;
     e.attr_timeout = 0.0;
     e.entry_timeout = 0.0;
@@ -497,20 +521,22 @@ fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
     chfs_client::status ret=chfs->create_symbolic_link(parent,link,name,ino);
 
 
-    if(ret==chfs_client::OK)
-    {
-        std::cout<<"ok1 create symbolic"<<std::endl;
-        e.ino=ino;
-        fuse_reply_entry(req,&e);
-        std::cout<<"ok2 create symbolic"<<std::endl;
-    }
-    else
+    if(ret!=chfs_client::OK)
     {
         if(ret==chfs_client::EXIST)
             fuse_reply_err(req,EEXIST);
         else
             fuse_reply_err(req,ENOENT);
+        return;
     }
+    
+    e.ino=ino;
+    if(chfs_client::OK!=getattr(ino,e.attr))
+    {
+        fuse_reply_err(req,ENOENT);
+        return;
+    }
+    fuse_reply_entry(req,&e);
 }
 
 
@@ -537,9 +563,7 @@ fuseserver_readlink(fuse_req_t req, fuse_ino_t ino)
         fuse_reply_err(req,ENOENT);
         return;
     }
-    std::cout<<"ok1 read symbolic"<<std::endl;
     fuse_reply_readlink(req,link.c_str());
-    std::cout<<"ok2 read symbolic"<<std::endl;
 }
 
 struct fuse_lowlevel_ops fuseserver_oper;
