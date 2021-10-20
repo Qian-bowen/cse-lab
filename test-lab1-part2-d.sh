@@ -12,12 +12,15 @@ echo "SYMLINK TEST"
 rm ${DIR}/hosts ${DIR}/testhostslink ${DIR}/hosts_copy ${DIR}/hosts_copy2 >/dev/null 2>&1
 
 ln -s ${ORIG_FILE} ${DIR}/hosts
+# echo " cmd: ln -s ${ORIG_FILE} ${DIR}/hosts"
 diff ${ORIG_FILE} chfs1/hosts >/dev/null 2>&1
 if [ $? -ne 0 ];
 then
     echo "failed SYMLINK test"
     exit
 fi
+
+echo "TEST 1 PASS"
 
 cp ${ORIG_FILE} ${DIR}/hosts_copy
 ln -s hosts_copy ${DIR}/testhostslink
@@ -27,6 +30,8 @@ then
     echo "failed SYMLINK test"
     exit
 fi
+
+echo "TEST 2 PASS"
 
 rm ${DIR}/hosts_copy 
 touch ${DIR}/hosts_copy
