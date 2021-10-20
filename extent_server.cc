@@ -68,6 +68,17 @@ int extent_server::getattr(extent_protocol::extentid_t id, extent_protocol::attr
   return extent_protocol::OK;
 }
 
+int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr attr)
+{
+  printf("extent_server: setattr %lld\n", id);
+
+  id &= 0x7fffffff;
+
+  im->setattr(id, attr);
+
+  return extent_protocol::OK;
+}
+
 int extent_server::remove(extent_protocol::extentid_t id, int &)
 {
   printf("extent_server: write %lld\n", id);
