@@ -45,7 +45,7 @@ getattr(chfs_client::inum inum, struct stat &st)
     bzero(&st, sizeof(st));
 
     st.st_ino = inum;
-    printf("getattr %016llx %d\n", inum, chfs->isfile(inum));
+    // printf("getattr %016llx %d\n", inum, chfs->isfile(inum));
     if(chfs->isfile(inum)){
         chfs_client::fileinfo info;
         ret = chfs->getfile(inum, info);
@@ -57,7 +57,7 @@ getattr(chfs_client::inum inum, struct stat &st)
         st.st_mtime = info.mtime;
         st.st_ctime = info.ctime;
         st.st_size = info.size;
-        printf("   getattr -> %llu\n", info.size);
+        // printf("   getattr -> %llu\n", info.size);
     } else if(chfs->isdir(inum)){
         chfs_client::dirinfo info;
         ret = chfs->getdir(inum, info);
@@ -68,7 +68,7 @@ getattr(chfs_client::inum inum, struct stat &st)
         st.st_atime = info.atime;
         st.st_mtime = info.mtime;
         st.st_ctime = info.ctime;
-        printf("   getattr -> %lu %lu %lu\n", info.atime, info.mtime, info.ctime);
+        // printf("   getattr -> %lu %lu %lu\n", info.atime, info.mtime, info.ctime);
     }
     else {
         chfs_client::fileinfo info;
@@ -81,7 +81,7 @@ getattr(chfs_client::inum inum, struct stat &st)
         st.st_mtime = info.mtime;
         st.st_ctime = info.ctime;
         st.st_size = info.size;
-        printf("   getattr -> link %llu\n", info.size);
+        // printf("   getattr -> link %llu\n", info.size);
     }
     return chfs_client::OK;
 }
@@ -134,9 +134,9 @@ void
 fuseserver_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
         int to_set, struct fuse_file_info *fi)
 {
-    printf("fuseserver_setattr 0x%x\n", to_set);
+    // printf("fuseserver_setattr 0x%x\n", to_set);
     if (FUSE_SET_ATTR_SIZE & to_set) {
-        printf("   fuseserver_setattr set size to %zu\n", attr->st_size);
+        // printf("   fuseserver_setattr set size to %zu\n", attr->st_size);
 
 #if 1
     struct stat st;
@@ -178,7 +178,7 @@ fuseserver_read(fuse_req_t req, fuse_ino_t ino, size_t size,
     getattr(ino,st);
     std::string buf;
     int file_size=st.st_size;
-    printf("read file size:%d\n",file_size);
+    // printf("read file size:%d\n",file_size);
     if(off>=file_size) {
         fuse_reply_buf(req,buf.c_str(),0);
         return;
@@ -215,7 +215,7 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
 {
 #if 1
     // Change the above line to "#if 1", and your code goes here
-    printf("fuse write begin\n");
+    // printf("fuse write begin\n");
     size_t bytes_written=0;
     chfs->write(ino,size,off,buf,bytes_written);
     fuse_reply_write(req,size);
@@ -274,7 +274,7 @@ fuseserver_create(fuse_req_t req, fuse_ino_t parent, const char *name,
     chfs_client::status ret;
     if( (ret = fuseserver_createhelper( parent, name, mode, &e, extent_protocol::T_FILE)) == chfs_client::OK ) {
         fuse_reply_create(req, &e, fi);
-        printf("OK: create returns.\n");
+        // printf("OK: create returns.\n");
     } else {
         if (ret == chfs_client::EXIST) {
             fuse_reply_err(req, EEXIST);
@@ -307,7 +307,7 @@ void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent,
 void
 fuseserver_lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-    printf("look up from fuse\n");
+    // printf("look up from fuse\n");
     struct fuse_entry_param e;
     // In chfs, timeouts are always set to 0.0, and generations are always set to 0
     e.attr_timeout = 0.0;
@@ -382,7 +382,7 @@ fuseserver_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
     chfs_client::inum inum = ino; // req->in.h.nodeid;
     struct dirbuf b;
 
-    printf("fuseserver_readdir\n");
+    // printf("fuseserver_readdir\n");
 
     if(!chfs->isdir(inum)){
         fuse_reply_err(req, ENOTDIR);
@@ -510,7 +510,7 @@ void
 fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
 			 const char *name)
 {
-    std::cout<<"fuse create symbolic link:"<<link<<" name:"<<name<<std::endl;
+    // std::cout<<"fuse create symbolic link:"<<link<<" name:"<<name<<std::endl;
     struct fuse_entry_param e;
     e.attr_timeout = 0.0;
     e.entry_timeout = 0.0;
@@ -553,7 +553,7 @@ fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,
 void 
 fuseserver_readlink(fuse_req_t req, fuse_ino_t ino)
 {
-    std::cout<<"fuse read symbolic"<<std::endl;
+    // std::cout<<"fuse read symbolic"<<std::endl;
     std::string link;
     chfs_client::status ret=chfs->readlink(ino,link);
 
@@ -577,24 +577,27 @@ main(int argc, char *argv[])
 
     setvbuf(stdout, NULL, _IONBF, 0);
 
-#if 0
-    if(argc != 4){
-        fprintf(stderr, "Usage: chfs_client <mountpoint> <port-extent-server> <port-lock-server>\n");
+#if 1
+    if(argc != 3){
+        fprintf(stderr, "Usage: chfs_client <mountpoint> <port-extent-server>\n");
         exit(1);
     }
-#endif
+#else
     if(argc != 2){
         fprintf(stderr, "Usage: chfs_client <mountpoint>\n");
         exit(1);
     }
+#endif
     mountpoint = argv[1];
 
     srandom(getpid());
 
     myid = random();
 
-    // chfs = new chfs_client(argv[2], argv[3]);
-    chfs = new chfs_client();
+    printf("chfs begin new\n");
+    chfs = new chfs_client(argv[2]);
+    printf("chfs end new\n");
+    // chfs = new chfs_client();
 
     fuseserver_oper.getattr    = fuseserver_getattr;
     fuseserver_oper.statfs     = fuseserver_statfs;
@@ -608,16 +611,8 @@ main(int argc, char *argv[])
     fuseserver_oper.setattr    = fuseserver_setattr;
     fuseserver_oper.unlink     = fuseserver_unlink;
     fuseserver_oper.mkdir      = fuseserver_mkdir;
-
-
-    /** Your code here for Lab.
-     * you may want to add
-     * routines here to implement symbolic link,
-     * rmdir, etc.
-     * */
     fuseserver_oper.symlink    = fuseserver_symlink;
     fuseserver_oper.readlink    = fuseserver_readlink;
-
 
     const char *fuse_argv[20];
     int fuse_argc = 0;

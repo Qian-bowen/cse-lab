@@ -45,7 +45,7 @@ class chfs_client {
 
  public:
   chfs_client();
-  chfs_client(std::string, std::string);
+  chfs_client(std::string port_extent_server);
 
   int increase_time_of_dir_file(inum num);
 

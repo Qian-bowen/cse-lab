@@ -160,6 +160,7 @@ rpcc::call_m(unsigned int proc, marshall &req, R & r, TO to)
 template<class R> int
 rpcc::call(unsigned int proc, R & r, TO to) 
 {
+	printf("call(unsigned int proc, R & r, TO to)\n");
 	marshall m;
 	return call_m(proc, m, r, to);
 }
@@ -167,6 +168,7 @@ rpcc::call(unsigned int proc, R & r, TO to)
 template<class R, class A1> int
 rpcc::call(unsigned int proc, const A1 & a1, R & r, TO to) 
 {
+	printf("call(unsigned int proc, const A1 & a1, R & r, TO to)\n");
 	marshall m;
 	m << a1;
 	return call_m(proc, m, r, to);
@@ -176,6 +178,7 @@ template<class R, class A1, class A2> int
 rpcc::call(unsigned int proc, const A1 & a1, const A2 & a2,
 		R & r, TO to) 
 {
+	printf("call(unsigned int proc, const A1 & a1, const A2 & a2, R & r, TO to) \n");
 	marshall m;
 	m << a1;
 	m << a2;
@@ -358,6 +361,8 @@ class rpcs : public chanmgr {
 	// register a handler
 	template<class S, class A1, class R>
 		void reg(unsigned int proc, S*, int (S::*meth)(const A1 a1, R & r));
+	template<class S, class A1, class R>
+		void reg(unsigned int proc, S*, int (S::*meth)(const A1 a1, R r));
 	template<class S, class A1, class A2, class R>
 		void reg(unsigned int proc, S*, int (S::*meth)(const A1 a1, const A2, 
 					R & r));
@@ -407,6 +412,31 @@ rpcs::reg(unsigned int proc, S*sob, int (S::*meth)(const A1 a1, R & r))
 	};
 	reg1(proc, new h1(sob, meth));
 }
+
+template<class S, class A1, class R> void
+rpcs::reg(unsigned int proc, S*sob, int (S::*meth)(const A1 a1, R r))
+{
+	class h1 : public handler {
+		private:
+			S * sob;
+			int (S::*meth)(const A1 a1, R r);
+		public:
+			h1(S *xsob, int (S::*xmeth)(const A1 a1, R r))
+				: sob(xsob), meth(xmeth) { }
+			int fn(unmarshall &args, marshall &ret) {
+				A1 a1;
+				R r;
+				args >> a1;
+				if(!args.okdone())
+					return rpc_const::unmarshal_args_failure;
+				int b = (sob->*meth)(a1, r);
+				ret << r;
+				return b;
+			}
+	};
+	reg1(proc, new h1(sob, meth));
+}
+
 
 template<class S, class A1, class A2, class R> void
 rpcs::reg(unsigned int proc, S*sob, int (S::*meth)(const A1 a1, const A2 a2, 

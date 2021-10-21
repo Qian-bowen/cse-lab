@@ -100,7 +100,7 @@ block_manager::alloc_block()
     {
       //set bitmap
       set_block_in_bitmap(i);
-      // printf("allocate block:%d\n",i);
+      printf("allocate block:%d\n",i);
       return i;
     }
   }

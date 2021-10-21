@@ -16,8 +16,8 @@ extent_server::extent_server()
 
 int extent_server::create(uint32_t type, extent_protocol::extentid_t &id)
 {
+  printf("server create\n");
   // alloc a new inode and return inum
-  printf("extent_server: create inode\n");
   id = im->alloc_inode(type);
 
   return extent_protocol::OK;
@@ -25,6 +25,7 @@ int extent_server::create(uint32_t type, extent_protocol::extentid_t &id)
 
 int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
 {
+  printf("server put\n");
   id &= 0x7fffffff;
   
   const char * cbuf = buf.c_str();
@@ -68,7 +69,7 @@ int extent_server::getattr(extent_protocol::extentid_t id, extent_protocol::attr
   return extent_protocol::OK;
 }
 
-int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr attr)
+int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr attr, int &)
 {
   printf("extent_server: setattr %lld\n", id);
 

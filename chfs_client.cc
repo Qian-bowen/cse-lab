@@ -11,15 +11,18 @@
 
 chfs_client::chfs_client()
 {
-    ec = new extent_client();
-
+    // ec = new extent_client();
 }
 
-chfs_client::chfs_client(std::string extent_dst, std::string lock_dst)
+chfs_client::chfs_client(std::string port_extent_server)
 {
-    ec = new extent_client();
+    printf("construct ec before\n");
+    ec = new extent_client(port_extent_server);
+    printf("construct ec middle\n");
     if (ec->put(1, "") != extent_protocol::OK)
+    // if (ec->create(extent_protocol::types::T_DIR,1) != extent_protocol::OK)
         printf("error init root dir\n"); // XYB: init root dir
+    printf("construct ec end\n");
 }
 
 chfs_client::inum
@@ -68,7 +71,7 @@ chfs_client::isfile(inum inum)
     extent_protocol::attr a;
 
     if (ec->getattr(inum, a) != extent_protocol::OK) {
-        printf("error getting attr\n");
+        // printf("error getting attr\n");
         return false;
     }
 
@@ -206,7 +209,7 @@ chfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out)
      * note: lookup is what you need to check if file exist;
      * after create file or dir, you must remember to modify the parent infomation.
      */
-    printf("begin create file\n");
+    // printf("begin create file\n");
     //check id dir
     if(!isdir(parent))
         return NOENT;
@@ -216,15 +219,15 @@ chfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out)
     inum tmp_inode;
     if(OK!=lookup(parent,name,found,tmp_inode))
     {
-        printf("create look up error\n");
+        // printf("create look up error\n");
         return NOENT;
     }
     if(found==true)
     {
-        printf("file already exist\n");
+        // printf("file already exist\n");
         return EXIST;
     }
-    printf("same name not exist\n");
+    // printf("same name not exist\n");
     //create file
     if(OK!=ec->create(extent_protocol::T_FILE,ino_out))
         return NOENT;
@@ -252,7 +255,7 @@ chfs_client::mkdir(inum parent, const char *name, mode_t mode, inum &ino_out)
 {
     int r = OK;
 
-    printf("mkdir begin\n");
+    // printf("mkdir begin\n");
 
     /*
      * your code goes here.
@@ -266,12 +269,12 @@ chfs_client::mkdir(inum parent, const char *name, mode_t mode, inum &ino_out)
     inum tmp_inode;
     if(OK!=lookup(parent,name,found,tmp_inode))
     {
-        printf("mkdir lookup error\n");
+        // printf("mkdir lookup error\n");
         return NOENT;
     }
     if(found==true)
     {
-        printf("dir already exist\n");
+        // printf("dir already exist\n");
         return EXIST;
     }
 
@@ -308,11 +311,11 @@ chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
      * note: lookup file from parent dir according to name;
      * you should design the format of directory content.
      */
-    printf("look up begin\n");
-    printf("look up name:%s parent:%lld\n",name,parent);
+    // printf("look up begin\n");
+    // printf("look up name:%s parent:%lld\n",name,parent);
     if(!isdir(parent))
     {
-        printf("look up parent is not dir\n");
+        // printf("look up parent is not dir\n");
         return NOENT;
     }
     std::string dir_buf="";
@@ -320,7 +323,7 @@ chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
     {
         return NOENT;
     }
-    printf("look up loop begin\n");
+    // printf("look up loop begin\n");
     std::cout<<"dir buf:"<<dir_buf<<std::endl;
     int len=dir_buf.size();
     int pos=0;
@@ -348,7 +351,7 @@ chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
 
         pos+=2;
 
-        printf("look up:%d$  name:%s\n",inode_num,tmp_name.c_str());
+        // printf("look up:%d$  name:%s\n",inode_num,tmp_name.c_str());
 
         if(tmp_name.compare(name)==0)
         {
@@ -359,7 +362,7 @@ chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
         }
     }
     found=false;
-    printf("look up end\n");
+    // printf("look up end\n");
     return r;
 }
 
@@ -368,7 +371,7 @@ chfs_client::readdir(inum dir, std::list<dirent> &list)
 {
     int r = OK;
 
-    printf("readdir begin\n");
+    // printf("readdir begin\n");
 
     /*
      * your code goes here.
@@ -377,7 +380,7 @@ chfs_client::readdir(inum dir, std::list<dirent> &list)
      */
     if(!isdir(dir))
     {
-        printf("not dir\n");
+        // printf("not dir\n");
         return NOENT;
     }
     std::string dir_buf="";
@@ -424,7 +427,7 @@ chfs_client::read(inum ino, size_t size, off_t off, std::string &data)
 {
     int r = OK;
 
-    printf("read file begin ino:%lld size:%lld off:%d\n",ino,size,off);
+    // printf("read file begin ino:%lld size:%lld off:%d\n",ino,size,off);
 
     /*
      * your code goes here.
@@ -443,7 +446,7 @@ chfs_client::read(inum ino, size_t size, off_t off, std::string &data)
         data=read_buf.substr(off,size);
     }
 
-    printf("read content:%s\n",data.c_str());
+    // printf("read content:%s\n",data.c_str());
 
     return r;
 }
@@ -454,7 +457,7 @@ chfs_client::write(inum ino, size_t size, off_t off, const char *data,
 {
     int r = OK;
 
-    printf("write file begin inum:%lld off:%d size:%d\n",ino,off,size);
+    // printf("write file begin inum:%lld off:%d size:%d\n",ino,off,size);
 
     /*
      * your code goes here.
@@ -514,7 +517,7 @@ int chfs_client::unlink(inum parent,const char *name)
      * and update the parent directory content.
      */
 
-    printf("unlink begin name:%s\n",name);
+    // printf("unlink begin name:%s\n",name);
 
     std::list<dirent> dir;
     inum inum_to_delete;
@@ -554,7 +557,7 @@ int chfs_client::unlink(inum parent,const char *name)
 
 int chfs_client::create_symbolic_link(inum parent,const char *link,const char *name,inum & ino)
 {
-    printf("create symbolic link:%s name:%s parent:%lld\n",link,name,parent);
+    // printf("create symbolic link:%s name:%s parent:%lld\n",link,name,parent);
     bool found=false;
     inum tmp_inode;
 
@@ -563,22 +566,22 @@ int chfs_client::create_symbolic_link(inum parent,const char *link,const char *n
     //look up
     if(OK!=lookup(parent,name,found,tmp_inode))
     {
-        printf("symbolic link look up error\n");
+        // printf("symbolic link look up error\n");
         return NOENT;
     }
     if(found==true)
     {
-        printf("symbolic link already exist\n");
+        // printf("symbolic link already exist\n");
         return EXIST;
     }
 
     if(OK!=ec->create(extent_protocol::T_SYMLINK,ino))
     {
-        printf("symbolic create error\n");
+        // printf("symbolic create error\n");
         return IOERR;
     }
 
-    printf("symbolic create success ino:%d\n",ino);
+    // printf("symbolic create success ino:%d\n",ino);
 
     if(OK!=ec->put(ino,std::string(link)))
     {
@@ -592,7 +595,7 @@ int chfs_client::create_symbolic_link(inum parent,const char *link,const char *n
 
     dir_buf+=make_dir_entry(ino,std::string(name));
 
-    std::cout<<"make dir buf:"<<dir_buf<<std::endl;
+    // std::cout<<"make dir buf:"<<dir_buf<<std::endl;
 
     //write back
     if(OK!=ec->put(parent,dir_buf))
@@ -600,7 +603,7 @@ int chfs_client::create_symbolic_link(inum parent,const char *link,const char *n
 
     increase_time_of_dir_file(parent);
 
-    printf("create symbolic link end\n");
+    // printf("create symbolic link end\n");
 
     return OK;
 }
@@ -608,10 +611,10 @@ int chfs_client::create_symbolic_link(inum parent,const char *link,const char *n
 
 int chfs_client::readlink(inum ino,std::string& link)
 {
-    std::cout<<"read symbolic link"<<std::endl;
+    // std::cout<<"read symbolic link"<<std::endl;
     if(!issymlink(ino)) return NOENT;
     ec->get(ino,link);
-    std::cout<<"link:"<<link<<std::endl;
+    // std::cout<<"link:"<<link<<std::endl;
     return OK;
 }
 
