@@ -7,6 +7,10 @@ disk::disk()
   bzero(blocks, sizeof(blocks));
 }
 
+disk::~disk()
+{
+
+}
 
 void
 disk::read_block(blockid_t id, char *buf)
@@ -151,6 +155,11 @@ block_manager::block_manager()
 
 }
 
+block_manager::~block_manager()
+{
+  delete d;
+}
+
 void
 block_manager::read_block(uint32_t id, char *buf)
 {
@@ -175,6 +184,11 @@ inode_manager::inode_manager()
     printf("\tim: error! alloc first inode %d, should be 1\n", root_dir);
     exit(0);
   }
+}
+
+inode_manager::~inode_manager()
+{
+  delete bm;
 }
 
 /* Create a new file.

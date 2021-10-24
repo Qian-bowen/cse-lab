@@ -21,6 +21,7 @@ class extent_server {
 
  public:
   extent_server();
+  ~extent_server();
 
   int create(uint32_t type, extent_protocol::extentid_t &id);
   int put(extent_protocol::extentid_t id, std::string, int &);

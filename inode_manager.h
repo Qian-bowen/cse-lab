@@ -22,6 +22,7 @@ class disk {
 
  public:
   disk();
+  ~disk();
   void read_block(uint32_t id, char *buf);
   void write_block(uint32_t id, const char *buf);
 };
@@ -40,6 +41,7 @@ class block_manager {
   std::map <uint32_t, int> using_blocks;
  public:
   block_manager();
+  ~block_manager();
   struct superblock sb;
 
   bool is_block_free(uint32_t id);
@@ -93,6 +95,7 @@ class inode_manager {
 
  public:
   inode_manager();
+  ~inode_manager();
   uint32_t alloc_inode(uint32_t type);
   void free_inode(uint32_t inum);
   void read_file(uint32_t inum, char **buf, int *size);

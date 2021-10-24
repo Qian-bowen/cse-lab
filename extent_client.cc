@@ -23,6 +23,11 @@ extent_client::extent_client(std::string extent_dst)
   }
 }
 
+extent_client::~extent_client()
+{
+    delete cl;
+}
+
 extent_protocol::status
 extent_client::create(uint32_t type, extent_protocol::extentid_t &id)
 {

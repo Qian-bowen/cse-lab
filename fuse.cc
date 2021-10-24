@@ -594,9 +594,7 @@ main(int argc, char *argv[])
 
     myid = random();
 
-    printf("chfs begin new\n");
     chfs = new chfs_client(argv[2]);
-    printf("chfs end new\n");
     // chfs = new chfs_client();
 
     fuseserver_oper.getattr    = fuseserver_getattr;
@@ -666,10 +664,9 @@ main(int argc, char *argv[])
     fuse_session_add_chan(se, ch);
     // err = fuse_session_loop_mt(se);   // FK: wheelfs does this; why?
     err = fuse_session_loop(se);
-
     fuse_session_destroy(se);
     close(fd);
-    fuse_unmount(mountpoint);
+    fuse_unmount(mountpoint);//where error occur
 
     return err ? 1 : 0;
 }

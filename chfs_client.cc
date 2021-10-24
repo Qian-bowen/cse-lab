@@ -16,13 +16,13 @@ chfs_client::chfs_client()
 
 chfs_client::chfs_client(std::string port_extent_server)
 {
-    printf("construct ec before\n");
+    // printf("construct ec before\n");
     ec = new extent_client(port_extent_server);
-    printf("construct ec middle\n");
+    // printf("construct ec middle\n");
     if (ec->put(1, "") != extent_protocol::OK)
     // if (ec->create(extent_protocol::types::T_DIR,1) != extent_protocol::OK)
         printf("error init root dir\n"); // XYB: init root dir
-    printf("construct ec end\n");
+    // printf("construct ec end\n");
 }
 
 chfs_client::inum
@@ -355,7 +355,7 @@ chfs_client::lookup(inum parent, const char *name, bool &found, inum &ino_out)
 
         if(tmp_name.compare(name)==0)
         {
-            printf("look up find\n");
+            // printf("look up find\n");
             found=true;
             ino_out=inode_num;
             return r;
@@ -447,7 +447,7 @@ chfs_client::read(inum ino, size_t size, off_t off, std::string &data)
     }
 
     // printf("read content:%s\n",data.c_str());
-
+    printf("$read$:%s\n",data);
     return r;
 }
 
@@ -456,6 +456,8 @@ chfs_client::write(inum ino, size_t size, off_t off, const char *data,
         size_t &bytes_written)
 {
     int r = OK;
+
+    printf("$write$:%s\n",data);
 
     // printf("write file begin inum:%lld off:%d size:%d\n",ino,off,size);
 

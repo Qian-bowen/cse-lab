@@ -160,7 +160,7 @@ rpcc::call_m(unsigned int proc, marshall &req, R & r, TO to)
 template<class R> int
 rpcc::call(unsigned int proc, R & r, TO to) 
 {
-	printf("call(unsigned int proc, R & r, TO to)\n");
+	// printf("call(unsigned int proc, R & r, TO to)\n");
 	marshall m;
 	return call_m(proc, m, r, to);
 }
@@ -168,7 +168,7 @@ rpcc::call(unsigned int proc, R & r, TO to)
 template<class R, class A1> int
 rpcc::call(unsigned int proc, const A1 & a1, R & r, TO to) 
 {
-	printf("call(unsigned int proc, const A1 & a1, R & r, TO to)\n");
+	// printf("call(unsigned int proc, const A1 & a1, R & r, TO to)\n");
 	marshall m;
 	m << a1;
 	return call_m(proc, m, r, to);
@@ -178,7 +178,7 @@ template<class R, class A1, class A2> int
 rpcc::call(unsigned int proc, const A1 & a1, const A2 & a2,
 		R & r, TO to) 
 {
-	printf("call(unsigned int proc, const A1 & a1, const A2 & a2, R & r, TO to) \n");
+	// printf("call(unsigned int proc, const A1 & a1, const A2 & a2, R & r, TO to) \n");
 	marshall m;
 	m << a1;
 	m << a2;
