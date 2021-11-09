@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 #include "extent_protocol.h" // TODO: delete it
+#include <map>
+
 
 #define DISK_SIZE  1024*1024*16
 #define BLOCK_SIZE 512
@@ -20,6 +22,7 @@ class disk {
 
  public:
   disk();
+  ~disk();
   void read_block(uint32_t id, char *buf);
   void write_block(uint32_t id, const char *buf);
 };
@@ -38,9 +41,16 @@ class block_manager {
   std::map <uint32_t, int> using_blocks;
  public:
   block_manager();
+  ~block_manager();
   struct superblock sb;
 
+  bool is_block_free(uint32_t id);
+  void set_block_in_bitmap(uint32_t id);
+  void unset_block_in_bitmap(uint32_t id);
+  void indirect_free_block(uint32_t id,unsigned int size);
+
   uint32_t alloc_block();
+  uint32_t alloc_data_block();
   void free_block(uint32_t id);
   void read_block(uint32_t id, char *buf);
   void write_block(uint32_t id, const char *buf);
@@ -81,15 +91,18 @@ class inode_manager {
   block_manager *bm;
   struct inode* get_inode(uint32_t inum);
   void put_inode(uint32_t inum, struct inode *ino);
+  int test_cnt=0;
 
  public:
   inode_manager();
+  ~inode_manager();
   uint32_t alloc_inode(uint32_t type);
   void free_inode(uint32_t inum);
   void read_file(uint32_t inum, char **buf, int *size);
   void write_file(uint32_t inum, const char *buf, int size);
   void remove_file(uint32_t inum);
   void getattr(uint32_t inum, extent_protocol::attr &a);
+  void setattr(uint32_t inum, extent_protocol::attr a);
 };
 
 #endif
