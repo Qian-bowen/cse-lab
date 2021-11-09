@@ -24,7 +24,7 @@ use strict;
 $| = 1;
 
 if($#ARGV != 0){
-    print STDERR "Usage: test-lab2-part1-b.pl directory1\n";
+    print STDERR "Usage: test-lab1-part2-b.pl directory1\n";
     exit(1);
 }
 my $dir1 = $ARGV[0];
@@ -64,6 +64,7 @@ print "OK\n";
 
 print "Write beyond the end of an existing file: ";
 writeat($dir1, $f1, 65536);
+# writeat($dir1, $f1, 20000);
 checkcontent($dir1, $f1);
 print "OK\n";
 
@@ -109,6 +110,10 @@ sub checkcontent {
       $c2 .= $_;
     }
     close(F);
+    # print $files->{$name};
+    # print "\n";
+    # print $c2;
+    # print "\n";
     $files->{$name} eq $c2 or die "content of $f is incorrect\n";
 }
 
