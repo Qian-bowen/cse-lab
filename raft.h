@@ -90,6 +90,13 @@ private:
     std::thread* background_apply;
 
     // Your code here:
+    int commit_index;
+    int last_applied;
+    unsigned long last_receive_rpc_time; // last heartbeat time
+    int vote_receive;
+
+    unsigned long election_timeout;
+    bool is_voted;  // is voted in this term
 
 
 private:
@@ -122,7 +129,11 @@ private:
     void run_background_apply();
 
     // Your code here:
-
+    unsigned long get_current_time();
+    inline void set_role(raft_role role){this->role=role;}
+    inline raft_role get_role(){return this->role;}
+    inline void reset_election_timeout(){this->election_timeout=300+rand()%200;}
+    inline unsigned long get_election_timeout(){return this->election_timeout;}
 
 };
 
@@ -139,7 +150,12 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     background_election(nullptr),
     background_ping(nullptr),
     background_commit(nullptr),
-    background_apply(nullptr)
+    background_apply(nullptr),
+    commit_index(0),
+    last_applied(0),
+    last_receive_rpc_time(0),
+    vote_receive(0),
+    is_voted(false)
 {
     thread_pool = new ThrPool(32);
 
@@ -150,6 +166,7 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
 
     // Your code here: 
     // Do the initialization
+    srand(time(NULL));
 }
 
 template<typename state_machine, typename command>
@@ -231,6 +248,39 @@ bool raft<state_machine, command>::save_snapshot() {
 template<typename state_machine, typename command>
 int raft<state_machine, command>::request_vote(request_vote_args args, request_vote_reply& reply) {
     // Your code here:
+    mtx.lock();
+
+    // reply term
+    reply.term=std::max(args.term,this->current_term);
+    reply.vote_granted=false;
+
+    // for all servers
+    if(args.term>this->current_term)
+    {
+        this->current_term=args.term;
+        set_role(raft_role::follower);
+        is_voted=false; //not vote for the incoming term
+        // must not return here
+        RAFT_LOG("node:%d in request_vote become follower request term:%d",this->my_id,args.term);
+    }
+
+    // if follower
+    if(this->get_role()==raft_role::follower)
+    {
+        if(!is_voted)
+        {
+            is_voted=true;
+            reply.vote_granted=true;
+            this->last_receive_rpc_time=this->get_current_time();//todo
+        }
+    }
+
+
+    // RAFT_LOG("node:%d are required to vote for candidate:%d",this->my_id,args.candidate_id);
+
+
+
+    mtx.unlock();
     return 0;
 }
 
@@ -238,6 +288,42 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
 template<typename state_machine, typename command>
 void raft<state_machine, command>::handle_request_vote_reply(int target, const request_vote_args& arg, const request_vote_reply& reply) {
     // Your code here:
+    mtx.lock();
+
+    // for all servers
+    if(reply.term>this->current_term)
+    {
+        this->current_term=reply.term;
+        set_role(raft_role::follower);
+        RAFT_LOG("node:%d in handle_request_vote_reply become follower",this->my_id);
+    }
+
+    if(this->get_role()==raft_role::candidate)
+    {
+        // agree to vote
+        if(reply.vote_granted==true)
+        {
+            this->vote_receive++;
+            RAFT_LOG("node:%d reply_term:%d election support from node:%d",this->my_id,reply.term,target);
+            // receive majority votes and become leader
+            if(this->vote_receive>this->num_nodes()/2)
+            {
+                this->set_role(raft_role::leader);
+                RAFT_LOG("node:%d become leader role:%d in term:%d",this->my_id,this->get_role(),this->current_term);
+                // first ping happen immediately after become a leader
+                int node_num=this->num_nodes();
+                append_entries_args<command> arg(this->current_term,this->my_id,this->commit_index,this->last_applied,std::vector<log_entry<command>>(),this->commit_index);
+                RAFT_LOG("ping");
+                for(int i=0;i<node_num;++i)
+                {
+                    if(i==this->my_id) continue;
+                    thread_pool->addObjJob(this, &raft::send_append_entries, i, arg);
+                }
+            }
+        }
+    }
+    
+    mtx.unlock();
     return;
 }
 
@@ -245,12 +331,46 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
 template<typename state_machine, typename command>
 int raft<state_machine, command>::append_entries(append_entries_args<command> arg, append_entries_reply& reply) {
     // Your code here:
+    mtx.lock();
+    RAFT_LOG("node:%d heartbeat from leader:%d term:%d",this->my_id,arg.leader_id,arg.term);
+
+    // reply term
+    reply.term=std::max(arg.term,this->current_term);
+
+    // for all servers
+    if(arg.term>this->current_term)
+    {
+        this->current_term=arg.term;
+        set_role(raft_role::follower);
+        RAFT_LOG("node:%d in heartbeat become follower",this->my_id);
+    }
+
+    //heartbeat from new leader
+    if(this->get_role()==raft_role::candidate)
+    {
+        this->current_term=arg.term;
+        set_role(raft_role::follower);
+        RAFT_LOG("node:%d in heartbeat become follower",this->my_id);
+    }
+
+    this->last_receive_rpc_time=this->get_current_time();
+
+    mtx.unlock();
     return 0;
 }
 
 template<typename state_machine, typename command>
 void raft<state_machine, command>::handle_append_entries_reply(int target, const append_entries_args<command>& arg, const append_entries_reply& reply) {
     // Your code here:
+    mtx.lock();
+    // for all server
+    if(reply.term>this->current_term)
+    {
+        RAFT_LOG("node:%d in handle_append_entries_reply become follower",this->my_id);
+        this->current_term=reply.term;
+        this->set_role(raft_role::follower);
+    }
+    mtx.unlock();
     return;
 }
 
@@ -314,12 +434,53 @@ void raft<state_machine, command>::run_background_election() {
     //        For example:
     //        if (current_time - last_received_RPC_time > timeout) start_election();
     //        Actually, the timeout should be different between the follower (e.g. 300-500ms) and the candidate (e.g. 1s).
+    
+    const int candidate_election_timeout=1000;
+    unsigned long last_election_begin_time=0;
 
+    reset_election_timeout();
     
     while (true) {
         if (is_stopped()) return;
         // Your code here:
+        // check leader liveness
+        mtx.lock();
 
+        if(this->get_role()!=raft_role::leader)
+        {
+            unsigned long now=this->get_current_time();
+            if((now-this->last_receive_rpc_time<get_election_timeout())
+                ||(this->get_role()==raft_role::candidate && now-last_election_begin_time<candidate_election_timeout))
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            else
+            {
+                // begin new election if no heartbeat or election timeout
+                reset_election_timeout();
+        
+                last_election_begin_time=get_current_time();
+                // as a follower start election
+                this->current_term++;
+                // become candidate
+                RAFT_LOG("node:%d become candidate",this->my_id);
+                this->set_role(raft_role::candidate);
+                //vote for itself
+                this->vote_receive=1;
+                this->is_voted=true;
+                request_vote_args args(this->current_term,this->my_id,this->commit_index,this->last_applied);
+
+                int node_num=this->num_nodes();
+                for(int i=0;i<node_num;++i)
+                {
+                    if(i==this->my_id) continue;
+                    thread_pool->addObjJob(this, &raft::send_request_vote, i, args);
+                }
+            }
+        }
+        
+        mtx.unlock();
+        
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }    
     
@@ -369,14 +530,24 @@ void raft<state_machine, command>::run_background_ping() {
     // Send empty append_entries RPC to the followers.
 
     // Only work for the leader.
-    
+    const unsigned long ping_timeout=150;
     while (true) {
         if (is_stopped()) return;
         // Your code here:
-
-
-        
-        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Change the timeout here!
+        mtx.lock();
+        if(this->get_role()==raft_role::leader)
+        {
+            RAFT_LOG("ping");
+            int node_num=this->num_nodes();
+            append_entries_args<command> arg(this->current_term,this->my_id,this->commit_index,this->last_applied,std::vector<log_entry<command>>(),this->commit_index);
+            for(int i=0;i<node_num;++i)
+            {
+                if(i==this->my_id) continue;
+                thread_pool->addObjJob(this, &raft::send_append_entries, i, arg);
+            }
+        }
+        mtx.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(ping_timeout)); // Change the timeout here!
     }    
     return;
 }
@@ -387,6 +558,14 @@ void raft<state_machine, command>::run_background_ping() {
                         Other functions
 
 *******************************************************************/
+template<typename state_machine, typename command>
+unsigned long raft<state_machine, command>::get_current_time()
+{
+    unsigned long now = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count();
+    return now;
+}
+
 
 
 
