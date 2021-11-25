@@ -63,7 +63,8 @@ public:
     int term;
     command cmd;
     log_entry(){}
-    log_entry(int term_,command cmd_):term(term_),cmd(cmd_){}
+    log_entry(int term_):term(term_){}
+    log_entry(int term_, command cmd_):term(term_),cmd(cmd_){}
 };
 
 template<typename command>
@@ -125,8 +126,9 @@ class append_entries_reply {
 public:
     // Your code here
     int term;
+    int high_log_entry_index;
     bool success;
-    append_entries_reply(int term_,bool success_):term(term_),success(success_){}
+    append_entries_reply(int term_, int high_log_entry_index_, bool success_):term(term_),high_log_entry_index(high_log_entry_index_),success(success_){}
     append_entries_reply(){}
 };
 
