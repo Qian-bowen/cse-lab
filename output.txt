@@ -1,0 +1,635 @@
+Running 2 Tests ...
+Test (part1.leader_election): Initial election
+[1637818475962][raft.h:235][node 0 term 0] start
+[1637818475962][raft.h:615][node 0 term 1] node:0 become candidate
+[1637818475962][raft.h:235][node 1 term 0] start
+[1637818475962][raft.h:615][node 1 term 1] node:1 become candidate
+[1637818475963][raft.h:235][node 2 term 0] start
+[1637818475963][raft.h:303][node 2 term 1] node:2 in request_vote become follower request term:1
+[1637818475963][raft.h:315][node 2 term 1] node:2 vote for node:0 in term:1
+[1637818475963][raft.h:615][node 2 term 2] node:2 become candidate
+[1637818475963][raft.h:355][node 0 term 1] node:0 reply_term:1 election support from node:2
+[1637818475964][raft.h:362][node 0 term 1] node:0 become leader role:2 in term:1
+[1637818475964][raft.h:424][node 1 term 1] append term:1 leader_id:0 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818475964][raft.h:425][node 1 term 1] log max index:0
+[1637818475964][raft.h:303][node 1 term 2] node:1 in request_vote become follower request term:2
+[1637818475964][raft.h:315][node 1 term 2] node:1 vote for node:2 in term:2
+[1637818475964][raft.h:509][node 0 term 1] handle entry reply target:1 term:1 success:1 entry size:0
+[1637818475964][raft.h:424][node 2 term 2] append term:1 leader_id:0 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818475965][raft.h:425][node 2 term 2] log max index:0
+[1637818475965][raft.h:303][node 0 term 2] node:0 in request_vote become follower request term:2
+[1637818475965][raft.h:315][node 0 term 2] node:0 vote for node:2 in term:2
+[1637818475965][raft.h:355][node 2 term 2] node:2 reply_term:2 election support from node:1
+[1637818475965][raft.h:362][node 2 term 2] node:2 become leader role:2 in term:2
+[1637818475965][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818475965][raft.h:425][node 0 term 2] log max index:0
+[1637818475965][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818475965][raft.h:425][node 1 term 2] log max index:0
+[1637818475965][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818475966][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818476125][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476125][raft.h:425][node 0 term 2] log max index:0
+[1637818476125][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476125][raft.h:425][node 1 term 2] log max index:0
+[1637818476125][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818476125][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818476267][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476267][raft.h:425][node 0 term 2] log max index:0
+[1637818476268][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476268][raft.h:425][node 1 term 2] log max index:0
+[1637818476268][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818476268][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818476416][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476416][raft.h:425][node 0 term 2] log max index:0
+[1637818476416][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476417][raft.h:425][node 1 term 2] log max index:0
+[1637818476417][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818476417][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818476566][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476567][raft.h:425][node 0 term 2] log max index:0
+[1637818476566][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476567][raft.h:425][node 1 term 2] log max index:0
+[1637818476567][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818476567][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818476723][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476724][raft.h:425][node 0 term 2] log max index:0
+[1637818476723][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476724][raft.h:425][node 1 term 2] log max index:0
+[1637818476724][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818476725][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818476868][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476868][raft.h:425][node 0 term 2] log max index:0
+[1637818476868][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818476868][raft.h:425][node 1 term 2] log max index:0
+[1637818476868][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818476869][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818477018][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477018][raft.h:425][node 0 term 2] log max index:0
+[1637818477018][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477018][raft.h:425][node 1 term 2] log max index:0
+[1637818477019][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818477020][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818477179][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477179][raft.h:425][node 0 term 2] log max index:0
+[1637818477179][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477180][raft.h:425][node 1 term 2] log max index:0
+[1637818477179][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818477180][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818477324][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477324][raft.h:425][node 0 term 2] log max index:0
+[1637818477325][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477326][raft.h:425][node 1 term 2] log max index:0
+[1637818477325][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818477326][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818477469][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477469][raft.h:425][node 0 term 2] log max index:0
+[1637818477469][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477470][raft.h:425][node 1 term 2] log max index:0
+[1637818477470][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818477470][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818477621][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477622][raft.h:425][node 0 term 2] log max index:0
+[1637818477621][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477622][raft.h:425][node 1 term 2] log max index:0
+[1637818477622][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818477622][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818477781][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477782][raft.h:425][node 1 term 2] log max index:0
+[1637818477781][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477782][raft.h:425][node 0 term 2] log max index:0
+[1637818477782][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818477782][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818477929][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477929][raft.h:425][node 1 term 2] log max index:0
+[1637818477929][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818477929][raft.h:425][node 0 term 2] log max index:0
+[1637818477930][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818477931][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818478075][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478075][raft.h:425][node 1 term 2] log max index:0
+[1637818478075][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478075][raft.h:425][node 0 term 2] log max index:0
+[1637818478076][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818478077][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818478224][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478224][raft.h:425][node 0 term 2] log max index:0
+[1637818478224][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478224][raft.h:425][node 1 term 2] log max index:0
+[1637818478224][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818478225][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818478375][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478375][raft.h:425][node 0 term 2] log max index:0
+[1637818478375][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478376][raft.h:425][node 1 term 2] log max index:0
+[1637818478375][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818478376][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818478525][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478525][raft.h:425][node 0 term 2] log max index:0
+[1637818478525][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478526][raft.h:425][node 1 term 2] log max index:0
+[1637818478527][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818478527][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818478684][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478685][raft.h:425][node 1 term 2] log max index:0
+[1637818478684][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478685][raft.h:425][node 0 term 2] log max index:0
+[1637818478686][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818478686][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818478831][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478832][raft.h:425][node 0 term 2] log max index:0
+[1637818478831][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478832][raft.h:425][node 1 term 2] log max index:0
+[1637818478833][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818478833][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818478977][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478977][raft.h:425][node 0 term 2] log max index:0
+[1637818478977][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818478977][raft.h:425][node 1 term 2] log max index:0
+[1637818478977][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818478977][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818479127][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479127][raft.h:425][node 0 term 2] log max index:0
+[1637818479127][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479127][raft.h:425][node 1 term 2] log max index:0
+[1637818479128][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818479129][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818479278][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479278][raft.h:425][node 0 term 2] log max index:0
+[1637818479278][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479278][raft.h:425][node 1 term 2] log max index:0
+[1637818479278][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818479279][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818479435][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479435][raft.h:425][node 1 term 2] log max index:0
+[1637818479435][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479436][raft.h:425][node 0 term 2] log max index:0
+[1637818479435][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818479436][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818479578][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479578][raft.h:425][node 0 term 2] log max index:0
+[1637818479578][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479579][raft.h:425][node 1 term 2] log max index:0
+[1637818479579][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818479579][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818479729][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479729][raft.h:425][node 0 term 2] log max index:0
+[1637818479729][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479730][raft.h:425][node 1 term 2] log max index:0
+[1637818479731][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818479731][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818479880][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479881][raft.h:425][node 0 term 2] log max index:0
+[1637818479880][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818479881][raft.h:425][node 1 term 2] log max index:0
+[1637818479881][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818479881][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818480038][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818480039][raft.h:425][node 0 term 2] log max index:0
+[1637818480038][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818480039][raft.h:425][node 1 term 2] log max index:0
+[1637818480040][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818480040][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818480184][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818480184][raft.h:425][node 1 term 2] log max index:0
+[1637818480184][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818480184][raft.h:425][node 0 term 2] log max index:0
+[1637818480184][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818480185][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818480331][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818480331][raft.h:425][node 0 term 2] log max index:0
+[1637818480331][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818480331][raft.h:425][node 1 term 2] log max index:0
+[1637818480332][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818480333][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818480481][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818480481][raft.h:425][node 1 term 2] log max index:0
+[1637818480482][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+Pass (part1.leader_election). wall-time: 14.56s, user-time: 0.14s, sys-time: 0.27s
+Test (part1.re_election): Election after network failure
+[1637818490602][raft.h:235][node 0 term 0] start
+[1637818490602][raft.h:615][node 0 term 1] node:0 become candidate
+[1637818490602][raft.h:235][node 1 term 0] start
+[1637818490602][raft.h:615][node 1 term 1] node:1 become candidate
+[1637818490603][raft.h:303][node 2 term 1] node:2 in request_vote become follower request term:1
+[1637818490603][raft.h:315][node 2 term 1] node:2 vote for node:0 in term:1
+[1637818490603][raft.h:303][node 3 term 1] node:3 in request_vote become follower request term:1
+[1637818490603][raft.h:315][node 3 term 1] node:3 vote for node:0 in term:1
+[1637818490603][raft.h:303][node 4 term 1] node:4 in request_vote become follower request term:1
+[1637818490604][raft.h:315][node 4 term 1] node:4 vote for node:0 in term:1
+[1637818490603][raft.h:355][node 0 term 1] node:0 reply_term:1 election support from node:2
+[1637818490603][raft.h:235][node 2 term 1] start
+[1637818490604][raft.h:355][node 0 term 1] node:0 reply_term:1 election support from node:3
+[1637818490604][raft.h:362][node 0 term 1] node:0 become leader role:2 in term:1
+[1637818490605][raft.h:615][node 2 term 2] node:2 become candidate
+[1637818490605][raft.h:424][node 1 term 1] append term:1 leader_id:0 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490605][raft.h:425][node 1 term 1] log max index:0
+[1637818490605][raft.h:424][node 3 term 1] append term:1 leader_id:0 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490605][raft.h:425][node 3 term 1] log max index:0
+[1637818490605][raft.h:424][node 4 term 1] append term:1 leader_id:0 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490605][raft.h:425][node 4 term 1] log max index:0
+[1637818490605][raft.h:509][node 0 term 1] handle entry reply target:1 term:1 success:1 entry size:0
+[1637818490605][raft.h:303][node 4 term 2] node:4 in request_vote become follower request term:2
+[1637818490605][raft.h:315][node 4 term 2] node:4 vote for node:2 in term:2
+[1637818490605][raft.h:509][node 0 term 1] handle entry reply target:3 term:1 success:1 entry size:0
+[1637818490605][raft.h:303][node 3 term 2] node:3 in request_vote become follower request term:2
+[1637818490606][raft.h:303][node 0 term 2] node:0 in request_vote become follower request term:2
+[1637818490606][raft.h:315][node 0 term 2] node:0 vote for node:2 in term:2
+[1637818490606][raft.h:315][node 3 term 2] node:3 vote for node:2 in term:2
+[1637818490605][raft.h:303][node 1 term 2] node:1 in request_vote become follower request term:2
+[1637818490606][raft.h:315][node 1 term 2] node:1 vote for node:2 in term:2
+[1637818490606][raft.h:235][node 3 term 2] start
+[1637818490605][raft.h:424][node 2 term 2] append term:1 leader_id:0 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490607][raft.h:425][node 2 term 2] log max index:0
+[1637818490607][raft.h:355][node 2 term 2] node:2 reply_term:2 election support from node:1
+[1637818490607][raft.h:355][node 2 term 2] node:2 reply_term:2 election support from node:4
+[1637818490607][raft.h:362][node 2 term 2] node:2 become leader role:2 in term:2
+[1637818490607][raft.h:235][node 4 term 2] start
+[1637818490608][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490608][raft.h:425][node 0 term 2] log max index:0
+[1637818490608][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490608][raft.h:425][node 1 term 2] log max index:0
+[1637818490608][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818490608][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818490617][raft.h:424][node 3 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490617][raft.h:425][node 3 term 2] log max index:0
+[1637818490617][raft.h:509][node 2 term 2] handle entry reply target:3 term:2 success:1 entry size:0
+[1637818490618][raft.h:424][node 4 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490618][raft.h:425][node 4 term 2] log max index:0
+[1637818490618][raft.h:509][node 2 term 2] handle entry reply target:4 term:2 success:1 entry size:0
+[1637818490756][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490756][raft.h:425][node 0 term 2] log max index:0
+[1637818490757][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490758][raft.h:425][node 1 term 2] log max index:0
+[1637818490757][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818490758][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818490763][raft.h:424][node 3 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490763][raft.h:425][node 3 term 2] log max index:0
+[1637818490763][raft.h:424][node 4 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490764][raft.h:425][node 4 term 2] log max index:0
+[1637818490763][raft.h:509][node 2 term 2] handle entry reply target:3 term:2 success:1 entry size:0
+[1637818490765][raft.h:509][node 2 term 2] handle entry reply target:4 term:2 success:1 entry size:0
+[1637818490907][raft.h:424][node 3 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490907][raft.h:425][node 3 term 2] log max index:0
+[1637818490907][raft.h:424][node 4 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490908][raft.h:425][node 4 term 2] log max index:0
+[1637818490908][raft.h:509][node 2 term 2] handle entry reply target:3 term:2 success:1 entry size:0
+[1637818490908][raft.h:509][node 2 term 2] handle entry reply target:4 term:2 success:1 entry size:0
+[1637818490913][raft.h:424][node 1 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490914][raft.h:425][node 1 term 2] log max index:0
+[1637818490913][raft.h:424][node 0 term 2] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818490914][raft.h:425][node 0 term 2] log max index:0
+[1637818490914][raft.h:509][node 2 term 2] handle entry reply target:0 term:2 success:1 entry size:0
+[1637818490914][raft.h:509][node 2 term 2] handle entry reply target:1 term:2 success:1 entry size:0
+[1637818491256][raft.h:615][node 1 term 3] node:1 become candidate
+[1637818491259][raft.h:303][node 3 term 3] node:3 in request_vote become follower request term:3
+[1637818491259][raft.h:315][node 3 term 3] node:3 vote for node:1 in term:3
+[1637818491259][raft.h:303][node 4 term 3] node:4 in request_vote become follower request term:3
+[1637818491259][raft.h:315][node 4 term 3] node:4 vote for node:1 in term:3
+[1637818491259][raft.h:355][node 1 term 3] node:1 reply_term:3 election support from node:3
+[1637818491259][raft.h:355][node 1 term 3] node:1 reply_term:3 election support from node:4
+[1637818491260][raft.h:362][node 1 term 3] node:1 become leader role:2 in term:3
+[1637818491261][raft.h:424][node 3 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491261][raft.h:425][node 3 term 3] log max index:0
+[1637818491261][raft.h:424][node 4 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491261][raft.h:425][node 4 term 3] log max index:0
+[1637818491261][raft.h:509][node 1 term 3] handle entry reply target:3 term:3 success:1 entry size:0
+[1637818491262][raft.h:509][node 1 term 3] handle entry reply target:4 term:3 success:1 entry size:0
+[1637818491267][raft.h:303][node 0 term 3] node:0 in request_vote become follower request term:3
+[1637818491267][raft.h:315][node 0 term 3] node:0 vote for node:1 in term:3
+[1637818491267][raft.h:424][node 0 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491268][raft.h:425][node 0 term 3] log max index:0
+[1637818491268][raft.h:509][node 1 term 3] handle entry reply target:0 term:3 success:1 entry size:0
+[1637818491365][raft.h:424][node 3 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491365][raft.h:425][node 3 term 3] log max index:0
+[1637818491365][raft.h:424][node 4 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491365][raft.h:425][node 4 term 3] log max index:0
+[1637818491365][raft.h:509][node 1 term 3] handle entry reply target:3 term:3 success:1 entry size:0
+[1637818491367][raft.h:509][node 1 term 3] handle entry reply target:4 term:3 success:1 entry size:0
+[1637818491370][raft.h:424][node 0 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491370][raft.h:425][node 0 term 3] log max index:0
+[1637818491370][raft.h:509][node 1 term 3] handle entry reply target:0 term:3 success:1 entry size:0
+[1637818491516][raft.h:424][node 3 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491516][raft.h:425][node 3 term 3] log max index:0
+[1637818491516][raft.h:424][node 4 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491516][raft.h:425][node 4 term 3] log max index:0
+[1637818491516][raft.h:424][node 0 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491517][raft.h:425][node 0 term 3] log max index:0
+[1637818491516][raft.h:509][node 1 term 3] handle entry reply target:3 term:3 success:1 entry size:0
+[1637818491517][raft.h:509][node 1 term 3] handle entry reply target:4 term:3 success:1 entry size:0
+[1637818491517][raft.h:509][node 1 term 3] handle entry reply target:0 term:3 success:1 entry size:0
+[1637818491667][raft.h:424][node 0 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491667][raft.h:425][node 0 term 3] log max index:0
+[1637818491668][raft.h:509][node 1 term 3] handle entry reply target:0 term:3 success:1 entry size:0
+[1637818491677][raft.h:424][node 3 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491677][raft.h:425][node 3 term 3] log max index:0
+[1637818491677][raft.h:424][node 4 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491677][raft.h:425][node 4 term 3] log max index:0
+[1637818491677][raft.h:509][node 1 term 3] handle entry reply target:3 term:3 success:1 entry size:0
+[1637818491678][raft.h:509][node 1 term 3] handle entry reply target:4 term:3 success:1 entry size:0
+[1637818491817][raft.h:424][node 0 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491817][raft.h:425][node 0 term 3] log max index:0
+[1637818491817][raft.h:509][node 1 term 3] handle entry reply target:0 term:3 success:1 entry size:0
+[1637818491821][raft.h:424][node 4 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491821][raft.h:425][node 4 term 3] log max index:0
+[1637818491821][raft.h:424][node 3 term 3] append term:3 leader_id:1 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818491821][raft.h:425][node 3 term 3] log max index:0
+[1637818491821][raft.h:509][node 1 term 3] handle entry reply target:3 term:3 success:1 entry size:0
+[1637818491821][raft.h:509][node 1 term 3] handle entry reply target:4 term:3 success:1 entry size:0
+[1637818492186][raft.h:615][node 3 term 4] node:3 become candidate
+[1637818492187][raft.h:303][node 0 term 4] node:0 in request_vote become follower request term:4
+[1637818492187][raft.h:315][node 0 term 4] node:0 vote for node:3 in term:4
+[1637818492187][raft.h:355][node 3 term 4] node:3 reply_term:4 election support from node:0
+[1637818492197][raft.h:303][node 4 term 4] node:4 in request_vote become follower request term:4
+[1637818492197][raft.h:315][node 4 term 4] node:4 vote for node:3 in term:4
+[1637818492207][raft.h:355][node 3 term 4] node:3 reply_term:4 election support from node:4
+[1637818492207][raft.h:362][node 3 term 4] node:3 become leader role:2 in term:4
+[1637818492208][raft.h:424][node 0 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492208][raft.h:425][node 0 term 4] log max index:0
+[1637818492208][raft.h:509][node 3 term 4] handle entry reply target:0 term:4 success:1 entry size:0
+[1637818492217][raft.h:424][node 4 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492217][raft.h:425][node 4 term 4] log max index:0
+[1637818492218][raft.h:509][node 3 term 4] handle entry reply target:4 term:4 success:1 entry size:0
+[1637818492293][raft.h:424][node 0 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492293][raft.h:425][node 0 term 4] log max index:0
+[1637818492293][raft.h:509][node 3 term 4] handle entry reply target:0 term:4 success:1 entry size:0
+[1637818492301][raft.h:424][node 4 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492301][raft.h:425][node 4 term 4] log max index:0
+[1637818492301][raft.h:509][node 3 term 4] handle entry reply target:4 term:4 success:1 entry size:0
+[1637818492447][raft.h:424][node 4 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492447][raft.h:425][node 4 term 4] log max index:0
+[1637818492448][raft.h:509][node 3 term 4] handle entry reply target:4 term:4 success:1 entry size:0
+[1637818492452][raft.h:424][node 0 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492452][raft.h:425][node 0 term 4] log max index:0
+[1637818492452][raft.h:509][node 3 term 4] handle entry reply target:0 term:4 success:1 entry size:0
+[1637818492595][raft.h:424][node 4 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492596][raft.h:425][node 4 term 4] log max index:0
+[1637818492596][raft.h:509][node 3 term 4] handle entry reply target:4 term:4 success:1 entry size:0
+[1637818492597][raft.h:424][node 0 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492597][raft.h:425][node 0 term 4] log max index:0
+[1637818492597][raft.h:509][node 3 term 4] handle entry reply target:0 term:4 success:1 entry size:0
+[1637818492746][raft.h:424][node 0 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492746][raft.h:425][node 0 term 4] log max index:0
+[1637818492747][raft.h:509][node 3 term 4] handle entry reply target:0 term:4 success:1 entry size:0
+[1637818492755][raft.h:424][node 4 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492755][raft.h:425][node 4 term 4] log max index:0
+[1637818492756][raft.h:509][node 3 term 4] handle entry reply target:4 term:4 success:1 entry size:0
+[1637818492898][raft.h:424][node 4 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492898][raft.h:425][node 4 term 4] log max index:0
+[1637818492898][raft.h:509][node 3 term 4] handle entry reply target:4 term:4 success:1 entry size:0
+[1637818492903][raft.h:424][node 0 term 4] append term:4 leader_id:3 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818492903][raft.h:425][node 0 term 4] log max index:0
+[1637818492904][raft.h:509][node 3 term 4] handle entry reply target:0 term:4 success:1 entry size:0
+[1637818493306][raft.h:615][node 0 term 5] node:0 become candidate
+[1637818493312][raft.h:303][node 4 term 5] node:4 in request_vote become follower request term:5
+[1637818493312][raft.h:315][node 4 term 5] node:4 vote for node:0 in term:5
+[1637818493312][raft.h:355][node 0 term 5] node:0 reply_term:5 election support from node:4
+[1637818493343][raft.h:615][node 4 term 6] node:4 become candidate
+[1637818493348][raft.h:303][node 0 term 6] node:0 in request_vote become follower request term:6
+[1637818493348][raft.h:315][node 0 term 6] node:0 vote for node:4 in term:6
+[1637818493348][raft.h:355][node 4 term 6] node:4 reply_term:6 election support from node:0
+[1637818493378][raft.h:615][node 0 term 7] node:0 become candidate
+[1637818493386][raft.h:303][node 4 term 7] node:4 in request_vote become follower request term:7
+[1637818493386][raft.h:315][node 4 term 7] node:4 vote for node:0 in term:7
+[1637818493387][raft.h:355][node 0 term 7] node:0 reply_term:7 election support from node:4
+[1637818493395][raft.h:615][node 4 term 8] node:4 become candidate
+[1637818493400][raft.h:303][node 0 term 8] node:0 in request_vote become follower request term:8
+[1637818493400][raft.h:315][node 0 term 8] node:0 vote for node:4 in term:8
+[1637818493400][raft.h:355][node 4 term 8] node:4 reply_term:8 election support from node:0
+[1637818493410][raft.h:615][node 0 term 9] node:0 become candidate
+[1637818493417][raft.h:303][node 4 term 9] node:4 in request_vote become follower request term:9
+[1637818493417][raft.h:315][node 4 term 9] node:4 vote for node:0 in term:9
+[1637818493417][raft.h:355][node 0 term 9] node:0 reply_term:9 election support from node:4
+[1637818493426][raft.h:615][node 4 term 10] node:4 become candidate
+[1637818493432][raft.h:303][node 0 term 10] node:0 in request_vote become follower request term:10
+[1637818493432][raft.h:315][node 0 term 10] node:0 vote for node:4 in term:10
+[1637818493433][raft.h:355][node 4 term 10] node:4 reply_term:10 election support from node:0
+[1637818493442][raft.h:615][node 0 term 11] node:0 become candidate
+[1637818493448][raft.h:303][node 4 term 11] node:4 in request_vote become follower request term:11
+[1637818493448][raft.h:315][node 4 term 11] node:4 vote for node:0 in term:11
+[1637818493448][raft.h:355][node 0 term 11] node:0 reply_term:11 election support from node:4
+[1637818493458][raft.h:615][node 4 term 12] node:4 become candidate
+[1637818493463][raft.h:303][node 0 term 12] node:0 in request_vote become follower request term:12
+[1637818493463][raft.h:315][node 0 term 12] node:0 vote for node:4 in term:12
+[1637818493464][raft.h:355][node 4 term 12] node:4 reply_term:12 election support from node:0
+[1637818493473][raft.h:615][node 0 term 13] node:0 become candidate
+[1637818493480][raft.h:303][node 4 term 13] node:4 in request_vote become follower request term:13
+[1637818493480][raft.h:315][node 4 term 13] node:4 vote for node:0 in term:13
+[1637818493481][raft.h:355][node 0 term 13] node:0 reply_term:13 election support from node:4
+[1637818493490][raft.h:615][node 4 term 14] node:4 become candidate
+[1637818493494][raft.h:303][node 0 term 14] node:0 in request_vote become follower request term:14
+[1637818493494][raft.h:315][node 0 term 14] node:0 vote for node:4 in term:14
+[1637818493495][raft.h:355][node 4 term 14] node:4 reply_term:14 election support from node:0
+[1637818493504][raft.h:615][node 0 term 15] node:0 become candidate
+[1637818493510][raft.h:303][node 4 term 15] node:4 in request_vote become follower request term:15
+[1637818493511][raft.h:315][node 4 term 15] node:4 vote for node:0 in term:15
+[1637818493512][raft.h:355][node 0 term 15] node:0 reply_term:15 election support from node:4
+[1637818493521][raft.h:615][node 4 term 16] node:4 become candidate
+[1637818493525][raft.h:303][node 0 term 16] node:0 in request_vote become follower request term:16
+[1637818493525][raft.h:315][node 0 term 16] node:0 vote for node:4 in term:16
+[1637818493526][raft.h:355][node 4 term 16] node:4 reply_term:16 election support from node:0
+[1637818493535][raft.h:615][node 0 term 17] node:0 become candidate
+[1637818493542][raft.h:303][node 4 term 17] node:4 in request_vote become follower request term:17
+[1637818493542][raft.h:315][node 4 term 17] node:4 vote for node:0 in term:17
+[1637818493542][raft.h:355][node 0 term 17] node:0 reply_term:17 election support from node:4
+[1637818493552][raft.h:615][node 4 term 18] node:4 become candidate
+[1637818493556][raft.h:303][node 0 term 18] node:0 in request_vote become follower request term:18
+[1637818493557][raft.h:315][node 0 term 18] node:0 vote for node:4 in term:18
+[1637818493558][raft.h:355][node 4 term 18] node:4 reply_term:18 election support from node:0
+[1637818493566][raft.h:615][node 0 term 19] node:0 become candidate
+[1637818493573][raft.h:303][node 4 term 19] node:4 in request_vote become follower request term:19
+[1637818493573][raft.h:315][node 4 term 19] node:4 vote for node:0 in term:19
+[1637818493573][raft.h:355][node 0 term 19] node:0 reply_term:19 election support from node:4
+[1637818493583][raft.h:615][node 4 term 20] node:4 become candidate
+[1637818493587][raft.h:303][node 0 term 20] node:0 in request_vote become follower request term:20
+[1637818493587][raft.h:315][node 0 term 20] node:0 vote for node:4 in term:20
+[1637818493588][raft.h:355][node 4 term 20] node:4 reply_term:20 election support from node:0
+[1637818493597][raft.h:615][node 0 term 21] node:0 become candidate
+[1637818493604][raft.h:303][node 4 term 21] node:4 in request_vote become follower request term:21
+[1637818493605][raft.h:315][node 4 term 21] node:4 vote for node:0 in term:21
+[1637818493605][raft.h:355][node 0 term 21] node:0 reply_term:21 election support from node:4
+[1637818493614][raft.h:615][node 4 term 22] node:4 become candidate
+[1637818493618][raft.h:303][node 0 term 22] node:0 in request_vote become follower request term:22
+[1637818493618][raft.h:315][node 0 term 22] node:0 vote for node:4 in term:22
+[1637818493619][raft.h:355][node 4 term 22] node:4 reply_term:22 election support from node:0
+[1637818493628][raft.h:615][node 0 term 23] node:0 become candidate
+[1637818493635][raft.h:303][node 4 term 23] node:4 in request_vote become follower request term:23
+[1637818493635][raft.h:315][node 4 term 23] node:4 vote for node:0 in term:23
+[1637818493636][raft.h:355][node 0 term 23] node:0 reply_term:23 election support from node:4
+[1637818493645][raft.h:615][node 4 term 24] node:4 become candidate
+[1637818493649][raft.h:303][node 0 term 24] node:0 in request_vote become follower request term:24
+[1637818493650][raft.h:315][node 0 term 24] node:0 vote for node:4 in term:24
+[1637818493650][raft.h:355][node 4 term 24] node:4 reply_term:24 election support from node:0
+[1637818493659][raft.h:615][node 0 term 25] node:0 become candidate
+[1637818493666][raft.h:303][node 4 term 25] node:4 in request_vote become follower request term:25
+[1637818493666][raft.h:315][node 4 term 25] node:4 vote for node:0 in term:25
+[1637818493666][raft.h:355][node 0 term 25] node:0 reply_term:25 election support from node:4
+[1637818493676][raft.h:615][node 4 term 26] node:4 become candidate
+[1637818493680][raft.h:303][node 0 term 26] node:0 in request_vote become follower request term:26
+[1637818493680][raft.h:315][node 0 term 26] node:0 vote for node:4 in term:26
+[1637818493681][raft.h:355][node 4 term 26] node:4 reply_term:26 election support from node:0
+[1637818493690][raft.h:615][node 0 term 27] node:0 become candidate
+[1637818493697][raft.h:303][node 4 term 27] node:4 in request_vote become follower request term:27
+[1637818493698][raft.h:315][node 4 term 27] node:4 vote for node:0 in term:27
+[1637818493698][raft.h:355][node 0 term 27] node:0 reply_term:27 election support from node:4
+[1637818493707][raft.h:615][node 4 term 28] node:4 become candidate
+[1637818493711][raft.h:303][node 0 term 28] node:0 in request_vote become follower request term:28
+[1637818493711][raft.h:315][node 0 term 28] node:0 vote for node:4 in term:28
+[1637818493711][raft.h:355][node 4 term 28] node:4 reply_term:28 election support from node:0
+[1637818493721][raft.h:615][node 0 term 29] node:0 become candidate
+[1637818493728][raft.h:303][node 4 term 29] node:4 in request_vote become follower request term:29
+[1637818493728][raft.h:315][node 4 term 29] node:4 vote for node:0 in term:29
+[1637818493728][raft.h:355][node 0 term 29] node:0 reply_term:29 election support from node:4
+[1637818493738][raft.h:615][node 4 term 30] node:4 become candidate
+[1637818493742][raft.h:303][node 0 term 30] node:0 in request_vote become follower request term:30
+[1637818493743][raft.h:315][node 0 term 30] node:0 vote for node:4 in term:30
+[1637818493743][raft.h:355][node 4 term 30] node:4 reply_term:30 election support from node:0
+[1637818493752][raft.h:615][node 0 term 31] node:0 become candidate
+[1637818493759][raft.h:303][node 4 term 31] node:4 in request_vote become follower request term:31
+[1637818493759][raft.h:315][node 4 term 31] node:4 vote for node:0 in term:31
+[1637818493760][raft.h:355][node 0 term 31] node:0 reply_term:31 election support from node:4
+[1637818493770][raft.h:615][node 4 term 32] node:4 become candidate
+[1637818493774][raft.h:303][node 0 term 32] node:0 in request_vote become follower request term:32
+[1637818493774][raft.h:315][node 0 term 32] node:0 vote for node:4 in term:32
+[1637818493774][raft.h:355][node 4 term 32] node:4 reply_term:32 election support from node:0
+[1637818493784][raft.h:615][node 0 term 33] node:0 become candidate
+[1637818493790][raft.h:303][node 4 term 33] node:4 in request_vote become follower request term:33
+[1637818493791][raft.h:315][node 4 term 33] node:4 vote for node:0 in term:33
+[1637818493792][raft.h:355][node 0 term 33] node:0 reply_term:33 election support from node:4
+[1637818493800][raft.h:615][node 4 term 34] node:4 become candidate
+[1637818493805][raft.h:303][node 0 term 34] node:0 in request_vote become follower request term:34
+[1637818493805][raft.h:315][node 0 term 34] node:0 vote for node:4 in term:34
+[1637818493805][raft.h:355][node 4 term 34] node:4 reply_term:34 election support from node:0
+[1637818493815][raft.h:615][node 0 term 35] node:0 become candidate
+[1637818493822][raft.h:303][node 4 term 35] node:4 in request_vote become follower request term:35
+[1637818493822][raft.h:315][node 4 term 35] node:4 vote for node:0 in term:35
+[1637818493822][raft.h:355][node 0 term 35] node:0 reply_term:35 election support from node:4
+[1637818493832][raft.h:615][node 4 term 36] node:4 become candidate
+[1637818493836][raft.h:303][node 0 term 36] node:0 in request_vote become follower request term:36
+[1637818493837][raft.h:315][node 0 term 36] node:0 vote for node:4 in term:36
+[1637818493837][raft.h:355][node 4 term 36] node:4 reply_term:36 election support from node:0
+[1637818493846][raft.h:615][node 0 term 37] node:0 become candidate
+[1637818493853][raft.h:303][node 4 term 37] node:4 in request_vote become follower request term:37
+[1637818493853][raft.h:315][node 4 term 37] node:4 vote for node:0 in term:37
+[1637818493853][raft.h:355][node 0 term 37] node:0 reply_term:37 election support from node:4
+[1637818493863][raft.h:615][node 4 term 38] node:4 become candidate
+[1637818493866][raft.h:303][node 0 term 38] node:0 in request_vote become follower request term:38
+[1637818493866][raft.h:315][node 0 term 38] node:0 vote for node:4 in term:38
+[1637818493867][raft.h:355][node 4 term 38] node:4 reply_term:38 election support from node:0
+[1637818493876][raft.h:615][node 0 term 39] node:0 become candidate
+[1637818493884][raft.h:303][node 4 term 39] node:4 in request_vote become follower request term:39
+[1637818493884][raft.h:315][node 4 term 39] node:4 vote for node:0 in term:39
+[1637818493885][raft.h:355][node 0 term 39] node:0 reply_term:39 election support from node:4
+[1637818493894][raft.h:615][node 4 term 40] node:4 become candidate
+[1637818493897][raft.h:303][node 0 term 40] node:0 in request_vote become follower request term:40
+[1637818493897][raft.h:315][node 0 term 40] node:0 vote for node:4 in term:40
+[1637818493897][raft.h:355][node 4 term 40] node:4 reply_term:40 election support from node:0
+[1637818493907][raft.h:615][node 0 term 41] node:0 become candidate
+[1637818493914][raft.h:303][node 4 term 41] node:4 in request_vote become follower request term:41
+[1637818493914][raft.h:315][node 4 term 41] node:4 vote for node:0 in term:41
+[1637818493915][raft.h:355][node 0 term 41] node:0 reply_term:41 election support from node:4
+[1637818493920][raft.h:424][node 4 term 41] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818493920][raft.h:425][node 4 term 41] log max index:0
+[1637818493921][raft.h:477][node 2 term 2] node:2 in handle_append_entries_reply become follower
+[1637818493927][raft.h:424][node 0 term 41] append term:2 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818493928][raft.h:425][node 0 term 41] log max index:0
+[1637818493931][raft.h:615][node 2 term 42] node:2 become candidate
+[1637818493931][raft.h:303][node 0 term 42] node:0 in request_vote become follower request term:42
+[1637818493931][raft.h:315][node 0 term 42] node:0 vote for node:2 in term:42
+[1637818493931][raft.h:355][node 2 term 42] node:2 reply_term:42 election support from node:0
+[1637818493935][raft.h:303][node 4 term 42] node:4 in request_vote become follower request term:42
+[1637818493935][raft.h:315][node 4 term 42] node:4 vote for node:2 in term:42
+[1637818493935][raft.h:355][node 2 term 42] node:2 reply_term:42 election support from node:4
+[1637818493935][raft.h:362][node 2 term 42] node:2 become leader role:2 in term:42
+[1637818493935][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818493935][raft.h:425][node 0 term 42] log max index:0
+[1637818493936][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818493936][raft.h:425][node 4 term 42] log max index:0
+[1637818493936][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818493936][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818494072][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494072][raft.h:425][node 0 term 42] log max index:0
+[1637818494072][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818494080][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494080][raft.h:425][node 4 term 42] log max index:0
+[1637818494081][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818494221][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494221][raft.h:425][node 0 term 42] log max index:0
+[1637818494222][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818494225][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494226][raft.h:425][node 4 term 42] log max index:0
+[1637818494226][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818494372][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494372][raft.h:425][node 4 term 42] log max index:0
+[1637818494372][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818494382][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494382][raft.h:425][node 0 term 42] log max index:0
+[1637818494382][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818494527][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494527][raft.h:425][node 0 term 42] log max index:0
+[1637818494528][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818494534][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494534][raft.h:425][node 4 term 42] log max index:0
+[1637818494534][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818494673][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494673][raft.h:425][node 0 term 42] log max index:0
+[1637818494674][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818494677][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494677][raft.h:425][node 4 term 42] log max index:0
+[1637818494678][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818494824][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494824][raft.h:425][node 0 term 42] log max index:0
+[1637818494824][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494824][raft.h:425][node 4 term 42] log max index:0
+[1637818494824][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818494824][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818494974][raft.h:424][node 0 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494974][raft.h:425][node 0 term 42] log max index:0
+[1637818494974][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818494974][raft.h:425][node 4 term 42] log max index:0
+[1637818494974][raft.h:509][node 2 term 42] handle entry reply target:0 term:42 success:1 entry size:0
+[1637818494975][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818495128][raft.h:424][node 4 term 42] append term:42 leader_id:2 prev_log_index:0 prev_log_term:0 leader_commit:0 entry size:0
+[1637818495128][raft.h:425][node 4 term 42] log max index:0
+[1637818495128][raft.h:509][node 2 term 42] handle entry reply target:4 term:42 success:1 entry size:0
+[1637818495630][raft.h:615][node 4 term 43] node:4 become candidate
+[1637818495631][raft.h:303][node 2 term 43] node:2 in request_vote become follower request term:43
+[1637818495632][raft.h:315][node 2 term 43] node:2 vote for node:4 in term:43
+[1637818495632][raft.h:355][node 4 term 43] node:4 reply_term:43 election support from node:2
+[1637818496714][raft.h:615][node 4 term 44] node:4 become candidate
+[1637818496715][raft.h:303][node 2 term 44] node:2 in request_vote become follower request term:44
+[1637818496715][raft.h:315][node 2 term 44] node:2 vote for node:4 in term:44
+[1637818496716][raft.h:355][node 4 term 44] node:4 reply_term:44 election support from node:2
+[1637818497780][raft.h:615][node 4 term 45] node:4 become candidate
+[1637818497780][raft.h:303][node 2 term 45] node:2 in request_vote become follower request term:45
+[1637818497780][raft.h:315][node 2 term 45] node:2 vote for node:4 in term:45
+[1637818497781][raft.h:355][node 4 term 45] node:4 reply_term:45 election support from node:2
+[1637818498826][raft.h:615][node 4 term 46] node:4 become candidate
+[1637818498827][raft.h:303][node 2 term 46] node:2 in request_vote become follower request term:46
+[1637818498828][raft.h:315][node 2 term 46] node:2 vote for node:4 in term:46
+[1637818498828][raft.h:355][node 4 term 46] node:4 reply_term:46 election support from node:2
+[1637818499833][raft.h:615][node 4 term 47] node:4 become candidate
+[1637818499834][raft.h:303][node 2 term 47] node:2 in request_vote become follower request term:47
+[1637818499834][raft.h:315][node 2 term 47] node:2 vote for node:4 in term:47
+[1637818499834][raft.h:355][node 4 term 47] node:4 reply_term:47 election support from node:2
+[1637818500736][raft.h:615][node 4 term 48] node:4 become candidate
+[1637818500737][raft.h:303][node 2 term 48] node:2 in request_vote become follower request term:48
+[1637818500737][raft.h:315][node 2 term 48] node:2 vote for node:4 in term:48
+[1637818500737][raft.h:355][node 4 term 48] node:4 reply_term:48 election support from node:2
+[1637818501822][raft.h:615][node 4 term 49] node:4 become candidate
+[1637818501823][raft.h:303][node 2 term 49] node:2 in request_vote become follower request term:49
+[1637818501824][raft.h:315][node 2 term 49] node:2 vote for node:4 in term:49
+[1637818501824][raft.h:355][node 4 term 49] node:4 reply_term:49 election support from node:2
+[1637818502842][raft.h:615][node 4 term 50] node:4 become candidate
+[1637818502843][raft.h:303][node 2 term 50] node:2 in request_vote become follower request term:50
+[1637818502843][raft.h:315][node 2 term 50] node:2 vote for node:4 in term:50
+[1637818502843][raft.h:355][node 4 term 50] node:4 reply_term:50 election support from node:2
+[1637818503858][raft.h:615][node 4 term 51] node:4 become candidate
+[1637818503859][raft.h:303][node 2 term 51] node:2 in request_vote become follower request term:51
+[1637818503859][raft.h:315][node 2 term 51] node:2 vote for node:4 in term:51
+[1637818503859][raft.h:355][node 4 term 51] node:4 reply_term:51 election support from node:2
+[1637818504812][raft.h:615][node 4 term 52] node:4 become candidate
+[1637818504812][raft.h:303][node 2 term 52] node:2 in request_vote become follower request term:52
+[1637818504812][raft.h:315][node 2 term 52] node:2 vote for node:4 in term:52
+[1637818504813][raft.h:355][node 4 term 52] node:4 reply_term:52 election support from node:2
+Pass (part1.re_election). wall-time: 24.32s, user-time: 0.32s, sys-time: 1.06s
+Pass 2/2 tests. wall-time: 38.89s, user-time: 0.46s, sys-time: 1.33s

@@ -331,8 +331,8 @@ int raft_group<state_machine, command>::append_new_command(int value, int expect
     list_command cmd(value);
     auto start = std::chrono::system_clock::now();
     int leader_idx = 0;
-    int test_value=999;//just for test
-    int commit_max=INT32_MIN;
+    // int test_value=999;//just for test
+    // int commit_max=INT32_MIN;
     while (std::chrono::system_clock::now() < start + std::chrono::seconds(10)) {
         int log_idx = -1;
         for (size_t i = 0; i < nodes.size(); i++) {
@@ -354,13 +354,13 @@ int raft_group<state_machine, command>::append_new_command(int value, int expect
                 int committed_server = num_committed(log_idx);
                 // std::cout << "nun commited: " << committed_server << std::endl;
 
-                commit_max=std::max(commit_max,committed_server);//test
+                // commit_max=std::max(commit_max,committed_server);//test
 
                 if (committed_server >= expected_servers) {
                     // The log is committed!
                     int commited_value = get_committed_value(log_idx);
 
-                    test_value=commited_value;//test
+                    // test_value=commited_value;//test
 
                     if (commited_value == value)
                         return log_idx; // and the log is what we want!
@@ -372,8 +372,8 @@ int raft_group<state_machine, command>::append_new_command(int value, int expect
             mssleep(50);
         }
     }
-    // ASSERT(0, "Cannot make agreement!");
-    ASSERT(0, "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value << " commit max:"<<commit_max);
+    ASSERT(0, "Cannot make agreement!");
+    // ASSERT(0, "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value << " commit max:"<<commit_max);
     return -1;
 }
 

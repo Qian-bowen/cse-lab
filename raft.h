@@ -98,7 +98,7 @@ private:
     int vote_receive;
 
     unsigned long election_timeout;
-    bool is_voted;  // is voted in this term
+    int voted_for;  // voted for which candidate in this term, -1 means none
     unsigned long candidate_election_timeout;
 
     std::vector<log_entry<command>> log; // pair of term and command
@@ -164,7 +164,7 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     last_applied(0),
     last_receive_rpc_time(0),
     vote_receive(0),
-    is_voted(false)
+    voted_for(-1)
 {
     thread_pool = new ThrPool(32);
 
@@ -285,32 +285,41 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
     // mtx.lock();
     {
         std::unique_lock<std::mutex> lock(mtx);
-        // reply term
-        reply.term=std::max(args.term,this->current_term);
+        
         reply.vote_granted=false;
+
+        if(args.term<current_term)
+        {
+            reply.vote_granted=false;
+        }
 
         // for all servers
         if(args.term>this->current_term)
         {
             this->current_term=args.term;
             set_role(raft_role::follower);
-            is_voted=false; //not vote for the incoming term
             // must not return here
             #ifdef DEBUG
             RAFT_LOG("node:%d in request_vote become follower request term:%d",this->my_id,args.term);
             #endif
+            voted_for=-1;//new 
         }
 
-        // if follower
-        if(this->get_role()==raft_role::follower)
+        //  If votedFor is null or candidateId, and candidate’s log is at least as up-to-date as receiver’s log, grant vote
+        // decide to vote
+        if( (voted_for==-1)
+            && args.last_log_index>=(int)log.size()-1
+            && args.last_log_term>=log.back().term)
         {
-            if(!is_voted)
-            {
-                is_voted=true;
-                reply.vote_granted=true;
-                this->last_receive_rpc_time=this->get_current_time();//todo
-            }
+            #ifdef DEBUG
+            RAFT_LOG("node:%d vote for node:%d in term:%d",this->my_id,args.candidate_id,args.term);
+            #endif
+            voted_for=args.candidate_id;
+            reply.vote_granted=true;
         }
+
+        // reply term, for candidate to update itself
+        reply.term=this->current_term;
     }
     // mtx.unlock();
     return 0;
@@ -331,6 +340,7 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
             #ifdef DEBUG
             RAFT_LOG("node:%d in handle_request_vote_reply become follower",this->my_id);
             #endif
+            voted_for=-1;//new 
         }
 
         if(this->get_role()==raft_role::candidate)
@@ -381,39 +391,53 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
         std::unique_lock<std::mutex> lock(mtx);
         // RAFT_LOG("node:%d heartbeat from leader:%d term:%d",this->my_id,arg.leader_id,arg.term);
         reply.success=true;
-        // not a heartbeat
-        if(arg.entries.size()!=0)
+
+        // for all servers
+        if(arg.term>this->current_term)
         {
+            this->current_term=arg.term;
+            set_role(raft_role::follower);
             #ifdef DEBUG
-            RAFT_LOG("append term:%d leader_id:%d prev_log_index:%d prev_log_term:%d leader_commit:%d entry size:%d",arg.term,arg.leader_id,arg.prev_log_index,arg.prev_log_term,arg.leader_commit,(int)arg.entries.size());
-            RAFT_LOG("log max index:%d",(int)log.size()-1);
+            RAFT_LOG("node:%d become follower",this->my_id);
             #endif
-            if(arg.term<this->current_term)
-            {
-                reply.success=false;
-            }
-            // if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm
-            else if(arg.prev_log_index!=0 && arg.prev_log_index<(int)this->log.size() && this->log[arg.prev_log_index].term!=arg.prev_log_term)
-            {
-                reply.success=false;
-            }
-            else
-            {
-                std::vector<log_entry<command>> log_vec = arg.entries;
-                if(!log_vec.empty())
-                {
-                    /**
-                     * If an existing entry conflicts with a new one (same index
-                     * but different terms), delete the existing entry and all that
-                     * follow it
-                     */
-                    // delete conflict and add new, for simplicity, delete all here
-                    // do not delete 0 because its an empty entry
-                    log.erase(log.begin()+1+arg.prev_log_index,log.end());
-                    log.insert(log.end(),arg.entries.begin(),arg.entries.end());
-                }
-            }
+            voted_for=-1;//new 
         }
+
+        assert(arg.prev_log_index>=0);
+
+        if(arg.term<this->current_term)
+        {
+            reply.success=false;
+        }
+
+        // if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm
+        // log consistence checking for all servers
+        else if(arg.prev_log_index>=(int)this->log.size()
+            || (arg.prev_log_index<(int)this->log.size() && this->log[arg.prev_log_index].term!=arg.prev_log_term))
+        {
+            reply.success=false;
+        }
+ 
+        #ifdef DEBUG
+        RAFT_LOG("append term:%d leader_id:%d prev_log_index:%d prev_log_term:%d leader_commit:%d entry size:%d",arg.term,arg.leader_id,arg.prev_log_index,arg.prev_log_term,arg.leader_commit,(int)arg.entries.size());
+        RAFT_LOG("log max index:%d",(int)log.size()-1);
+        #endif
+
+         /**
+         * If an existing entry conflicts with a new one (same index
+         * but different terms), delete the existing entry and all that
+         * follow it
+         */
+        // delete conflict and add new, for simplicity, delete all here
+        // do not delete 0 because its an empty entry
+        
+        // erase if necessary
+        if(log.begin()+1+arg.prev_log_index<log.end())
+        {
+            log.erase(log.begin()+1+arg.prev_log_index,log.end());
+        }
+        log.insert(log.end(),arg.entries.begin(),arg.entries.end());
+        
 
         // can update in heartbeat, so that server can apply immediately
         if(arg.leader_commit>commit_index)
@@ -424,28 +448,9 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
             RAFT_LOG("update commit index to:%d",commit_index);
             #endif
         }
-        // reply term
-        reply.term=std::max(arg.term,this->current_term);
 
-        // for all servers
-        if(arg.term>this->current_term)
-        {
-            this->current_term=arg.term;
-            set_role(raft_role::follower);
-            #ifdef DEBUG
-            RAFT_LOG("node:%d in heartbeat become follower",this->my_id);
-            #endif
-        }
-
-        //heartbeat from new leader
-        if(this->get_role()==raft_role::candidate)
-        {
-            this->current_term=arg.term;
-            set_role(raft_role::follower);
-            #ifdef DEBUG
-            RAFT_LOG("node:%d in heartbeat become follower",this->my_id);
-            #endif
-        }
+        // reply term, for leader to update itself
+        reply.term=this->current_term;
 
         // update high_log_entry_index in reply
         reply.high_log_entry_index=this->log.size()-1;
@@ -462,6 +467,18 @@ void raft<state_machine, command>::handle_append_entries_reply(int target, const
     // mtx.lock();
     {
         std::unique_lock<std::mutex> lock(mtx);
+
+        // for all server
+        if(reply.term>this->current_term)
+        {
+            #ifdef DEBUG
+            RAFT_LOG("node:%d in handle_append_entries_reply become follower",this->my_id);
+            #endif
+            this->current_term=reply.term;
+            this->set_role(raft_role::follower);
+            voted_for=-1;//new 
+        }
+
         // RAFT_LOG("handle entry reply target:%d term:%d success:%d",target,reply.term,reply.success);
         if(this->get_role()==raft_role::leader)
         {
@@ -484,26 +501,18 @@ void raft<state_machine, command>::handle_append_entries_reply(int target, const
                 thread_pool->addObjJob(this, &raft::send_append_entries, target, arg_retry);
             }
             // If successful: update nextIndex and matchIndex for follower
-            // not for ping
-            else if(arg.entries.size()!=0)
+            else
             {
                 #ifdef DEBUG
                 RAFT_LOG("handle entry reply target:%d term:%d success:%d entry size:%d",target,reply.term,reply.success,(int)arg.entries.size());
                 #endif
                 // RAFT_LOG("target:%d prev next index:%d",target,next_index[target]);
-                next_index[target]=reply.high_log_entry_index+1;
+                // next_index[target]=reply.high_log_entry_index+1;
                 // RAFT_LOG("target:%d after next index:%d",target,next_index[target]);
+                // match_index[target]=reply.high_log_entry_index;
+                next_index[target]=reply.high_log_entry_index+1;
                 match_index[target]=reply.high_log_entry_index;
             }
-        }
-        // for all server
-        if(reply.term>this->current_term)
-        {
-            #ifdef DEBUG
-            RAFT_LOG("node:%d in handle_append_entries_reply become follower",this->my_id);
-            #endif
-            this->current_term=reply.term;
-            this->set_role(raft_role::follower);
         }
     }
     // mtx.unlock();
@@ -606,8 +615,8 @@ void raft<state_machine, command>::run_background_election() {
                     this->set_role(raft_role::candidate);
                     //vote for itself
                     this->vote_receive=1;
-                    this->is_voted=true;
-                    request_vote_args args(this->current_term,this->my_id,this->commit_index,this->last_applied);
+                    this->voted_for=my_id;
+                    request_vote_args args(this->current_term,this->my_id,this->log.size()-1,this->log.back().term);
 
                     int node_num=this->num_nodes();
                     for(int i=0;i<node_num;++i)
