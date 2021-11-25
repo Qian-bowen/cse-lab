@@ -143,6 +143,7 @@ private:
     inline void reset_candidate_election_timeout(){this->candidate_election_timeout=900+rand()%200;}
     inline unsigned long get_candidate_election_timeout(){return this->candidate_election_timeout;}
     int majority_element(std::vector<int>& nums,bool& have_result);
+    bool is_majority_reachable(std::vector<rpcc*>& clients);
 
 };
 
@@ -258,9 +259,10 @@ bool raft<state_machine, command>::new_command(command cmd, int &term, int &inde
             // update next_index match_index for itself
             next_index[my_id]=commit_index+1;
             match_index[my_id]=log.size()-1;
+
+            term = current_term;
+            index = (int)log.size()-1; // index is log index
         }
-        term = current_term;
-        index = (int)log.size()-1; // index is log index
     }
     // mtx.unlock();
     return is_leader;
@@ -294,7 +296,7 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
         }
 
         // for all servers
-        if(args.term>this->current_term)
+        else if(args.term>this->current_term)
         {
             this->current_term=args.term;
             set_role(raft_role::follower);
@@ -302,14 +304,15 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
             #ifdef DEBUG
             RAFT_LOG("node:%d in request_vote become follower request term:%d",this->my_id,args.term);
             #endif
-            voted_for=-1;//new 
+            voted_for=args.candidate_id;//new 
+            reply.vote_granted=true;
         }
 
         //  If votedFor is null or candidateId, and candidate’s log is at least as up-to-date as receiver’s log, grant vote
         // decide to vote
-        if( (voted_for==-1)
-            && args.last_log_index>=(int)log.size()-1
-            && args.last_log_term>=log.back().term)
+        // if my log is newer, refuse to vote
+        if((log.back().term<args.last_log_term)
+            ||((log.back().term==args.last_log_term)&&((int)log.size()-1<args.last_log_index)))
         {
             #ifdef DEBUG
             RAFT_LOG("node:%d vote for node:%d in term:%d",this->my_id,args.candidate_id,args.term);
@@ -415,6 +418,12 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
         else if(arg.prev_log_index>=(int)this->log.size()
             || (arg.prev_log_index<(int)this->log.size() && this->log[arg.prev_log_index].term!=arg.prev_log_term))
         {
+            if(arg.prev_log_index==0)
+            {
+                #ifdef DEBUG
+                RAFT_LOG("this term of empty:%d the other:%d",this->log[arg.prev_log_index].term,arg.prev_log_term);
+                #endif
+            }
             reply.success=false;
         }
  
@@ -432,11 +441,15 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
         // do not delete 0 because its an empty entry
         
         // erase if necessary
-        if(log.begin()+1+arg.prev_log_index<log.end())
+        if(reply.success)
         {
-            log.erase(log.begin()+1+arg.prev_log_index,log.end());
+            if(log.begin()+1+arg.prev_log_index<log.end())
+            {
+                log.erase(log.begin()+1+arg.prev_log_index,log.end());
+            }
+            log.insert(log.end(),arg.entries.begin(),arg.entries.end());
         }
-        log.insert(log.end(),arg.entries.begin(),arg.entries.end());
+        
         
 
         // can update in heartbeat, so that server can apply immediately
@@ -484,7 +497,7 @@ void raft<state_machine, command>::handle_append_entries_reply(int target, const
         {
             // If AppendEntries fails because of log inconsistency 
             // decrement nextIndex and retry
-            if(reply.success==false)
+            if(reply.success==false&&arg.entries.size()!=0)
             {
                 #ifdef DEBUG
                 RAFT_LOG("retry");
@@ -506,10 +519,6 @@ void raft<state_machine, command>::handle_append_entries_reply(int target, const
                 #ifdef DEBUG
                 RAFT_LOG("handle entry reply target:%d term:%d success:%d entry size:%d",target,reply.term,reply.success,(int)arg.entries.size());
                 #endif
-                // RAFT_LOG("target:%d prev next index:%d",target,next_index[target]);
-                // next_index[target]=reply.high_log_entry_index+1;
-                // RAFT_LOG("target:%d after next index:%d",target,next_index[target]);
-                // match_index[target]=reply.high_log_entry_index;
                 next_index[target]=reply.high_log_entry_index+1;
                 match_index[target]=reply.high_log_entry_index;
             }
@@ -597,7 +606,12 @@ void raft<state_machine, command>::run_background_election() {
                 if((now-this->last_receive_rpc_time<get_election_timeout())
                     ||(this->get_role()==raft_role::candidate && now-last_election_begin_time<get_candidate_election_timeout()))
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                // cannot become leader is majority is not reachable
+                else if(!is_majority_reachable(this->rpc_clients))
+                {
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
                 else
                 {
@@ -675,7 +689,7 @@ void raft<state_machine, command>::run_background_commit() {
                     }
                 }
 
-                // // send log
+                // send log
                 int node_num=this->num_nodes();
                 
                 for(int i=0;i<node_num;++i)
@@ -821,6 +835,35 @@ int raft<state_machine, command>::majority_element(std::vector<int>& nums,bool& 
         have_result=false;
     }
     return cand;
+}
+
+/**
+ * @brief this function is used to check whether the node can reach majority
+ * if the node cannot reach majority, it means it cannnot become leader
+ * so it cannot start an election and become candidate
+ * @tparam state_machine 
+ * @tparam command 
+ * @param clients 
+ * @return true 
+ * @return false 
+ */
+template<typename state_machine, typename command>
+bool raft<state_machine, command>::is_majority_reachable(std::vector<rpcc*>& clients)
+{
+
+    int cnt=0;
+    for(const auto& client:clients)
+    {
+        if(client->reachable())
+        {
+            cnt++;
+        }
+    }
+    if(cnt>(int)clients.size()/2)
+    {
+        return true;
+    }
+    return false;
 }
 
 
