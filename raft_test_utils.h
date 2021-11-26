@@ -77,6 +77,7 @@ std::vector<rpcc*> create_rpc_clients(const std::vector<rpcs*> &servers);
 class list_command : public raft_command {
 public:
     list_command(){}
+    // list_command()=default;
     list_command(const list_command &cmd) {value=cmd.value;}
     list_command(int v): value(v){}
     virtual ~list_command() {}
@@ -331,7 +332,7 @@ int raft_group<state_machine, command>::append_new_command(int value, int expect
     list_command cmd(value);
     auto start = std::chrono::system_clock::now();
     int leader_idx = 0;
-    // int test_value=999;//just for test
+    int test_value=999;//just for test
     // int commit_max=INT32_MIN;
     while (std::chrono::system_clock::now() < start + std::chrono::seconds(10)) {
         int log_idx = -1;
@@ -360,7 +361,7 @@ int raft_group<state_machine, command>::append_new_command(int value, int expect
                     // The log is committed!
                     int commited_value = get_committed_value(log_idx);
 
-                    // test_value=commited_value;//test
+                    test_value=commited_value;//test
 
                     if (commited_value == value)
                         return log_idx; // and the log is what we want!
@@ -372,8 +373,9 @@ int raft_group<state_machine, command>::append_new_command(int value, int expect
             mssleep(50);
         }
     }
-    ASSERT(0, "Cannot make agreement!");
-    // ASSERT(0, "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value << " commit max:"<<commit_max);
+    // ASSERT(0, "Cannot make agreement!");
+    std::cout<< "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value<<std::endl;//test
+    ASSERT(0, "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value );
     return -1;
 }
 

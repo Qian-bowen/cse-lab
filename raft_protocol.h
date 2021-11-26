@@ -28,14 +28,14 @@ public:
     // Your code here
     request_vote_args(int term_,int candidate_id_,int last_log_index_,int last_log_term_)
         :term(term_),candidate_id(candidate_id_),last_log_index(last_log_index_),last_log_term(last_log_term_){}
-    request_vote_args(){}
-    request_vote_args(const request_vote_args& r)
-    {
-        this->term=r.term;
-        this->candidate_id=r.candidate_id;
-        this->last_log_index=r.last_log_index;
-        this->last_log_term=r.last_log_term;
-    }
+    request_vote_args()=default;
+    // request_vote_args(const request_vote_args& r)
+    // {
+    //     this->term=r.term;
+    //     this->candidate_id=r.candidate_id;
+    //     this->last_log_index=r.last_log_index;
+    //     this->last_log_term=r.last_log_term;
+    // }
 };
 
 marshall& operator<<(marshall &m, const request_vote_args& args);
@@ -50,7 +50,7 @@ public:
     // Your code here
     request_vote_reply(int term,bool vote_granted)
         :term(term),vote_granted(vote_granted){}
-    request_vote_reply(){}
+    request_vote_reply()=default;
 };
 
 marshall& operator<<(marshall &m, const request_vote_reply& reply);
@@ -62,8 +62,8 @@ public:
     // Your code here
     int term;
     command cmd;
-    log_entry(){}
-    log_entry(int term_):term(term_){}
+    log_entry()=default;
+    log_entry(int term_):term(term_){cmd=command();} // template variable should also be correctly initialize
     log_entry(int term_, command cmd_):term(term_),cmd(cmd_){}
 };
 
@@ -95,7 +95,7 @@ public:
     int leader_commit;
     append_entries_args(int term_,int leader_id_,int prev_log_index_,int prev_log_term_,std::vector<log_entry<command>> entries_,int leader_commit_)
         :term(term_),leader_id(leader_id_),prev_log_index(prev_log_index_),prev_log_term(prev_log_term_),entries(entries_),leader_commit(leader_commit_){}
-    append_entries_args(){}
+    append_entries_args()=default;
 };
 
 template<typename command>
@@ -126,10 +126,9 @@ class append_entries_reply {
 public:
     // Your code here
     int term;
-    int high_log_entry_index;
     bool success;
-    append_entries_reply(int term_, int high_log_entry_index_, bool success_):term(term_),high_log_entry_index(high_log_entry_index_),success(success_){}
-    append_entries_reply(){}
+    append_entries_reply(int term_, bool success_):term(term_),success(success_){}
+    append_entries_reply()=default;
 };
 
 marshall& operator<<(marshall &m, const append_entries_reply& reply);

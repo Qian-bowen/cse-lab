@@ -15,7 +15,8 @@
 #include "raft_protocol.h"
 #include "raft_state_machine.h"
 
-// #define DEBUG 0
+#define DEBUG
+#define JUDGE
 
 template<typename state_machine, typename command>
 class raft {
@@ -100,6 +101,7 @@ private:
     unsigned long election_timeout;
     int voted_for;  // voted for which candidate in this term, -1 means none
     unsigned long candidate_election_timeout;
+    unsigned long last_election_begin_time;
 
     std::vector<log_entry<command>> log; // pair of term and command
     std::vector<int> next_index;
@@ -138,12 +140,16 @@ private:
     unsigned long get_current_time();
     inline void set_role(raft_role role){this->role=role;}
     inline raft_role get_role(){return this->role;}
+    // do not reset in loop! rand() is time consuming 
+    // avoid rand() possible
+    // Attention! too much node may have conflict
     inline void reset_election_timeout(){this->election_timeout=300+rand()%200;}
     inline unsigned long get_election_timeout(){return this->election_timeout;}
-    inline void reset_candidate_election_timeout(){this->candidate_election_timeout=900+rand()%200;}
+    inline void reset_candidate_election_timeout(){this->candidate_election_timeout=900+(10*my_id)%200;}
     inline unsigned long get_candidate_election_timeout(){return this->candidate_election_timeout;}
     int majority_element(std::vector<int>& nums,bool& have_result);
     bool is_majority_reachable(std::vector<rpcc*>& clients);
+    // int num_reachable_nodes(std::vector<rpcc*>& clients);
 
 };
 
@@ -165,7 +171,8 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     last_applied(0),
     last_receive_rpc_time(0),
     vote_receive(0),
-    voted_for(-1)
+    voted_for(-1),
+    last_election_begin_time(0)
 {
     thread_pool = new ThrPool(32);
 
@@ -232,8 +239,9 @@ bool raft<state_machine, command>::is_leader(int &term) {
 template<typename state_machine, typename command>
 void raft<state_machine, command>::start() {
     // Your code here:
-    
+    #ifdef DEBUG
     RAFT_LOG("start");
+    #endif
     this->background_election = new std::thread(&raft::run_background_election, this);
     this->background_ping = new std::thread(&raft::run_background_ping, this);
     this->background_commit = new std::thread(&raft::run_background_commit, this);
@@ -242,14 +250,14 @@ void raft<state_machine, command>::start() {
 
 template<typename state_machine, typename command>
 bool raft<state_machine, command>::new_command(command cmd, int &term, int &index) {
-    // Your code here:
-    // mtx.lock();
-    bool is_leader=false;
+    std::unique_lock<std::mutex> lock(mtx);
+
+    bool is_leader_reachable=false;
     {
-        std::unique_lock<std::mutex> lock(mtx);
-        is_leader=(this->get_role()==raft_role::leader);
+        // leader and half reachable
+        is_leader_reachable=(this->get_role()==raft_role::leader);
         // only leader can append cmd from client
-        if(is_leader)
+        if(is_leader_reachable)
         {
             log.push_back(log_entry<command>(this->current_term,cmd));
             #ifdef DEBUG
@@ -257,7 +265,6 @@ bool raft<state_machine, command>::new_command(command cmd, int &term, int &inde
             #endif
             // leader commit is valid when the majority commit
             // update next_index match_index for itself
-            next_index[my_id]=commit_index+1;
             match_index[my_id]=log.size()-1;
 
             term = current_term;
@@ -265,7 +272,7 @@ bool raft<state_machine, command>::new_command(command cmd, int &term, int &inde
         }
     }
     // mtx.unlock();
-    return is_leader;
+    return is_leader_reachable;
 }
 
 template<typename state_machine, typename command>
@@ -283,19 +290,17 @@ bool raft<state_machine, command>::save_snapshot() {
 *******************************************************************/
 template<typename state_machine, typename command>
 int raft<state_machine, command>::request_vote(request_vote_args args, request_vote_reply& reply) {
-    // Your code here:
-    // mtx.lock();
+    std::unique_lock<std::mutex> lock(mtx);
     {
-        std::unique_lock<std::mutex> lock(mtx);
-        
-        reply.vote_granted=false;
 
+        reply.vote_granted=false;
+        reply.term=this->current_term;
+
+        // for all servers
         if(args.term<current_term)
         {
             reply.vote_granted=false;
         }
-
-        // for all servers
         else if(args.term>this->current_term)
         {
             this->current_term=args.term;
@@ -304,25 +309,29 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
             #ifdef DEBUG
             RAFT_LOG("node:%d in request_vote become follower request term:%d",this->my_id,args.term);
             #endif
-            voted_for=args.candidate_id;//new 
-            reply.vote_granted=true;
+            voted_for=-1;
+            // reply.vote_granted=true;
         }
-
         //  If votedFor is null or candidateId, and candidate’s log is at least as up-to-date as receiver’s log, grant vote
         // decide to vote
         // if my log is newer, refuse to vote
         if((log.back().term<args.last_log_term)
-            ||((log.back().term==args.last_log_term)&&((int)log.size()-1<args.last_log_index)))
+            ||((log.back().term==args.last_log_term)&&((int)log.size()-1<=args.last_log_index)))
         {
-            #ifdef DEBUG
-            RAFT_LOG("node:%d vote for node:%d in term:%d",this->my_id,args.candidate_id,args.term);
-            #endif
-            voted_for=args.candidate_id;
-            reply.vote_granted=true;
+            if(voted_for==-1)
+            {
+                #ifdef DEBUG
+                RAFT_LOG("node:%d vote for node:%d in term:%d",this->my_id,args.candidate_id,args.term);
+                #endif
+            
+                voted_for=args.candidate_id;
+                reply.vote_granted=true;
+            }
         }
+        
 
-        // reply term, for candidate to update itself
-        reply.term=this->current_term;
+        // important! update receive rpc time!
+        this->last_receive_rpc_time=this->get_current_time();
     }
     // mtx.unlock();
     return 0;
@@ -331,11 +340,8 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
 
 template<typename state_machine, typename command>
 void raft<state_machine, command>::handle_request_vote_reply(int target, const request_vote_args& arg, const request_vote_reply& reply) {
-    // Your code here:
-    // mtx.lock();
+    std::unique_lock<std::mutex> lock(mtx);
     {
-        std::unique_lock<std::mutex> lock(mtx);
-        // for all servers
         if(reply.term>this->current_term)
         {
             this->current_term=reply.term;
@@ -343,7 +349,7 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
             #ifdef DEBUG
             RAFT_LOG("node:%d in handle_request_vote_reply become follower",this->my_id);
             #endif
-            voted_for=-1;//new 
+            voted_for=-1;
         }
 
         if(this->get_role()==raft_role::candidate)
@@ -356,44 +362,35 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
                 RAFT_LOG("node:%d reply_term:%d election support from node:%d",this->my_id,reply.term,target);
                 #endif
                 // receive majority votes and become leader
+                // can become a leader of a partition network if receive majority votes in the partition
                 if(this->vote_receive>this->num_nodes()/2)
                 {
                     this->set_role(raft_role::leader);
                     #ifdef DEBUG
                     RAFT_LOG("node:%d become leader role:%d in term:%d",this->my_id,this->get_role(),this->current_term);
                     #endif
+                    // RAFT_LOG("node:%d become leader role:%d in term:%d",this->my_id,this->get_role(),this->current_term);
                     // Reinitialized after election
                     // next index initialize to leader last log index + 1, namely log.size()-1+1
                     next_index.resize(next_index.size(),log.size());
                     match_index.resize(match_index.size(),0);
-
-                    // first ping happen immediately after become a leader
-                    int node_num=this->num_nodes();
-                    // RAFT_LOG("ping");
-                    for(int i=0;i<node_num;++i)
-                    {
-                        if(i==this->my_id) continue;
-                        // assert(next_index[i]-1<(int)log.size());
-                        append_entries_args<command> arg(this->current_term,this->my_id,next_index[i]-1,this->log[next_index[i]-1].term,std::vector<log_entry<command>>(),this->commit_index);
-                        thread_pool->addObjJob(this, &raft::send_append_entries, i, arg);
-                    }
                 }
             }
         }
     }
-    // mtx.unlock();
     return;
 }
 
 
 template<typename state_machine, typename command>
 int raft<state_machine, command>::append_entries(append_entries_args<command> arg, append_entries_reply& reply) {
-    // Your code here:
-    // mtx.lock();
+    std::unique_lock<std::mutex> lock(mtx);
     {
-        std::unique_lock<std::mutex> lock(mtx);
         // RAFT_LOG("node:%d heartbeat from leader:%d term:%d",this->my_id,arg.leader_id,arg.term);
         reply.success=true;
+
+        // reply term, for leader to update itself
+        reply.term=this->current_term;
 
         // for all servers
         if(arg.term>this->current_term)
@@ -406,8 +403,10 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
             voted_for=-1;//new 
         }
 
+        #ifdef JUDGE
         assert(arg.prev_log_index>=0);
-
+        #endif
+      
         if(arg.term<this->current_term)
         {
             reply.success=false;
@@ -416,44 +415,38 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
         // if log doesn’t contain an entry at prevLogIndex whose term matches prevLogTerm
         // log consistence checking for all servers
         else if(arg.prev_log_index>=(int)this->log.size()
-            || (arg.prev_log_index<(int)this->log.size() && this->log[arg.prev_log_index].term!=arg.prev_log_term))
+            || (this->log[arg.prev_log_index].term!=arg.prev_log_term))
         {
-            if(arg.prev_log_index==0)
-            {
-                #ifdef DEBUG
-                RAFT_LOG("this term of empty:%d the other:%d",this->log[arg.prev_log_index].term,arg.prev_log_term);
-                #endif
-            }
+            #ifdef JUDGE
+            assert(arg.prev_log_index!=0);
+            #endif
             reply.success=false;
         }
- 
+            
+        // important!!! a heartbeat may appended entry 
+        if(reply.success&&(int)arg.entries.size()>0)
+        {
+            log.erase(log.begin()+1+arg.prev_log_index,log.end());
+            log.insert(log.end(),arg.entries.begin(),arg.entries.end());
+        }
+
         #ifdef DEBUG
         RAFT_LOG("append term:%d leader_id:%d prev_log_index:%d prev_log_term:%d leader_commit:%d entry size:%d",arg.term,arg.leader_id,arg.prev_log_index,arg.prev_log_term,arg.leader_commit,(int)arg.entries.size());
         RAFT_LOG("log max index:%d",(int)log.size()-1);
         #endif
 
-         /**
-         * If an existing entry conflicts with a new one (same index
-         * but different terms), delete the existing entry and all that
-         * follow it
+        /**
+         * @brief in normal situation, leader commit is always le than follower commit index, but not hold for partition
+         * A,B,C,D,E for origin, A is leader, all commit index is 1
+         * now partition to group A,B and group C,D,E, C become leader and C,D,E commit to 6
+         * when rejoin, before  A konws it's not leader, it send commit index 1 to C
+         * not success and commit index of C should still be 6
          */
-        // delete conflict and add new, for simplicity, delete all here
-        // do not delete 0 because its an empty entry
+        #ifdef JUDGE
+        assert( (!reply.success) || (arg.leader_commit>=commit_index));
+        #endif
         
-        // erase if necessary
-        if(reply.success)
-        {
-            if(log.begin()+1+arg.prev_log_index<log.end())
-            {
-                log.erase(log.begin()+1+arg.prev_log_index,log.end());
-            }
-            log.insert(log.end(),arg.entries.begin(),arg.entries.end());
-        }
-        
-        
-
-        // can update in heartbeat, so that server can apply immediately
-        if(arg.leader_commit>commit_index)
+        if(reply.success && (arg.leader_commit>commit_index))
         {
             // get min
             commit_index=std::min(arg.leader_commit,(int)log.size()-1);
@@ -462,25 +455,29 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
             #endif
         }
 
-        // reply term, for leader to update itself
-        reply.term=this->current_term;
+        #ifdef DEBUG
+        if(commit_index>=(int)log.size())
+        {
+            RAFT_LOG("commit index:%d log max index:%d",commit_index,(int)log.size()-1);
+        }
+        #endif
 
-        // update high_log_entry_index in reply
-        reply.high_log_entry_index=this->log.size()-1;
+        // assert(commit_index<(int)log.size());
+        #ifdef JUDGE
+        assert(commit_index<(int)log.size());
+        #endif
+        
 
         this->last_receive_rpc_time=this->get_current_time();
     }
-    // mtx.unlock();
+  
     return 0;
 }
 
 template<typename state_machine, typename command>
 void raft<state_machine, command>::handle_append_entries_reply(int target, const append_entries_args<command>& arg, const append_entries_reply& reply) {
-    // Your code here:
-    // mtx.lock();
+    std::unique_lock<std::mutex> lock(mtx);
     {
-        std::unique_lock<std::mutex> lock(mtx);
-
         // for all server
         if(reply.term>this->current_term)
         {
@@ -497,21 +494,24 @@ void raft<state_machine, command>::handle_append_entries_reply(int target, const
         {
             // If AppendEntries fails because of log inconsistency 
             // decrement nextIndex and retry
-            if(reply.success==false&&arg.entries.size()!=0)
+            if(reply.success==false)
             {
                 #ifdef DEBUG
                 RAFT_LOG("retry");
                 #endif
+
                 next_index[target]--;
-                // assert(next_index[target]>=0);
-                std::vector<log_entry<command>> send_log;
-                if((int)log.size()-1>=next_index[target])
+
+                // speed up
+                int reply_term=reply.term;
+                if(reply_term<log[next_index[target]].term)
                 {
-                    send_log.insert(send_log.begin(),log.begin()+next_index[target],log.end());
+                    while(reply_term<log[next_index[target]].term)
+                    {
+                        next_index[target]--;
+                    }
+                    next_index[target]++;
                 }
-                // assert(next_index[target]-1<(int)log.size());
-                append_entries_args<command> arg_retry(this->current_term,this->my_id,next_index[target]-1,this->log[next_index[target]-1].term,send_log,this->commit_index);
-                thread_pool->addObjJob(this, &raft::send_append_entries, target, arg_retry);
             }
             // If successful: update nextIndex and matchIndex for follower
             else
@@ -519,8 +519,8 @@ void raft<state_machine, command>::handle_append_entries_reply(int target, const
                 #ifdef DEBUG
                 RAFT_LOG("handle entry reply target:%d term:%d success:%d entry size:%d",target,reply.term,reply.success,(int)arg.entries.size());
                 #endif
-                next_index[target]=reply.high_log_entry_index+1;
-                match_index[target]=reply.high_log_entry_index;
+                next_index[target]=arg.prev_log_index+arg.entries.size()+1;
+                match_index[target]=arg.prev_log_index+arg.entries.size();
             }
         }
     }
@@ -588,32 +588,28 @@ void raft<state_machine, command>::run_background_election() {
     //        For example:
     //        if (current_time - last_received_RPC_time > timeout) start_election();
     //        Actually, the timeout should be different between the follower (e.g. 300-500ms) and the candidate (e.g. 1s).
-    
-    unsigned long last_election_begin_time=0;
 
     reset_election_timeout();
     
     while (true) {
         if (is_stopped()) return;
-        // Your code here:
-        // attention! lock race problem
-        // mtx.lock();
+        // Your code here
         {
             std::unique_lock<std::mutex> lock(mtx);
-            if(this->get_role()!=raft_role::leader)
+            unsigned long now=this->get_current_time();
+
+            // cannot start new election until timeout
+            if(((this->get_role()==raft_role::candidate)
+                && (now-last_election_begin_time>get_candidate_election_timeout()))
+                ||
+                ((this->get_role()==raft_role::follower)
+                && (now-this->last_receive_rpc_time>get_election_timeout())))
             {
-                unsigned long now=this->get_current_time();
-                if((now-this->last_receive_rpc_time<get_election_timeout())
-                    ||(this->get_role()==raft_role::candidate && now-last_election_begin_time<get_candidate_election_timeout()))
-                {
-                    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-                // cannot become leader is majority is not reachable
-                else if(!is_majority_reachable(this->rpc_clients))
-                {
-                    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-                else
+                /**
+                 * @brief start an election if only the majority is reachable
+                 * imagine
+                 */
+                // if(is_majority_reachable(this->rpc_clients))
                 {
                     // begin new election if no heartbeat or election timeout
                     reset_election_timeout();
@@ -664,29 +660,13 @@ void raft<state_machine, command>::run_background_commit() {
         // mtx.lock();
         {
             std::unique_lock<std::mutex> lock(mtx);
-
             if(this->get_role()==raft_role::leader)
             {
-                // commit when majority agree
-                // leader commit first
-                bool result=true;
-                int major_index=majority_element(match_index,result);
-                if(result&& major_index>commit_index)
-                {
-                    #ifdef DEBUG
-                    RAFT_LOG("majority index:%d max_index:%d commit index:%d",major_index,(int)log.size()-1,commit_index);
-                    #endif
-                    for(int i=commit_index+1;i<=major_index;++i)
-                    {
-                        // assert(i<(int)log.size());
-                        if(log[i].term==current_term)
-                        {
-                            commit_index=i;
-                            #ifdef DEBUG
-                            RAFT_LOG("final leader commit:%d",commit_index);
-                            #endif
-                        }
-                    }
+                std::vector<int> maj(match_index);
+                sort(maj.begin(), maj.end());
+                int N=maj[num_nodes()/2];
+                if(N>commit_index&&log[N].term==current_term){
+                    commit_index=N;
                 }
 
                 // send log
@@ -705,7 +685,9 @@ void raft<state_machine, command>::run_background_commit() {
                         #ifdef DEBUG
                         RAFT_LOG("send log entry num:%d to %d",(int)send_log.size(),i);
                         #endif
-                        // assert(next_index[i]-1<(int)log.size());
+                        #ifdef JUDGE
+                        assert((next_index[i]-1<(int)log.size())&&(next_index[i]-1>=0));
+                        #endif
                         append_entries_args<command> arg(this->current_term,this->my_id,next_index[i]-1,this->log[next_index[i]-1].term,send_log,this->commit_index);
                         thread_pool->addObjJob(this, &raft::send_append_entries, i, arg);
                     }
@@ -728,24 +710,22 @@ void raft<state_machine, command>::run_background_apply() {
     // Hints: You should check the commit index and the apply index.
     //        Update the apply index and apply the log if commit_index > apply_index
 
-    
     while (true) {
         if (is_stopped()) return;
-        // Your code here:
-        // mtx.lock();
         {
             std::unique_lock<std::mutex> lock(mtx);
             if(commit_index>last_applied)
             {
                 last_applied++;
-                // assert(last_applied<(int)log.size());
+                #ifdef JUDGE
+                assert(last_applied<(int)log.size());
+                #endif
                 state->apply_log(log[last_applied].cmd);
                 #ifdef DEBUG
                 RAFT_LOG("apply index:%d",last_applied);
                 #endif
             }
         }
-        // mtx.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }    
     return;
@@ -756,11 +736,9 @@ void raft<state_machine, command>::run_background_ping() {
     // Send empty append_entries RPC to the followers.
 
     // Only work for the leader.
-    const unsigned long ping_timeout=150;
+    const unsigned long ping_timeout=100;
     while (true) {
         if (is_stopped()) return;
-        // Your code here:
-        // mtx.lock();
         {
             std::unique_lock<std::mutex> lock(mtx);
             if(this->get_role()==raft_role::leader)
@@ -770,14 +748,17 @@ void raft<state_machine, command>::run_background_ping() {
                 for(int i=0;i<node_num;++i)
                 {
                     if(i==this->my_id) continue;
-                    // assert(next_index[i]-1<(int)log.size());
-                    append_entries_args<command> arg(this->current_term,this->my_id,next_index[i]-1,this->log[next_index[i]-1].term,std::vector<log_entry<command>>(),this->commit_index);
+                    #ifdef JUDGE
+                    assert(next_index[i]-1<(int)log.size());
+                    assert((next_index[i]-1>=0));
+                    #endif
+                    std::vector<log_entry<command>> empty_ping;
+                    append_entries_args<command> arg(this->current_term,this->my_id,next_index[i]-1,this->log[next_index[i]-1].term,empty_ping,this->commit_index);
                     thread_pool->addObjJob(this, &raft::send_append_entries, i, arg);
                 }
             }
         }
         
-        // mtx.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(ping_timeout)); // Change the timeout here!
     }    
     return;
@@ -837,10 +818,10 @@ int raft<state_machine, command>::majority_element(std::vector<int>& nums,bool& 
     return cand;
 }
 
+
 /**
- * @brief this function is used to check whether the node can reach majority
- * if the node cannot reach majority, it means it cannnot become leader
- * so it cannot start an election and become candidate
+ * @brief whether the node can reach the majority
+ * 
  * @tparam state_machine 
  * @tparam command 
  * @param clients 
@@ -850,16 +831,12 @@ int raft<state_machine, command>::majority_element(std::vector<int>& nums,bool& 
 template<typename state_machine, typename command>
 bool raft<state_machine, command>::is_majority_reachable(std::vector<rpcc*>& clients)
 {
-
     int cnt=0;
     for(const auto& client:clients)
     {
-        if(client->reachable())
-        {
-            cnt++;
-        }
+        if(client->reachable()) cnt++;
     }
-    if(cnt>(int)clients.size()/2)
+    if(cnt>num_nodes()/2)
     {
         return true;
     }
