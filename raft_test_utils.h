@@ -374,7 +374,7 @@ int raft_group<state_machine, command>::append_new_command(int value, int expect
         }
     }
     // ASSERT(0, "Cannot make agreement!");
-    std::cout<< "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value<<std::endl;//test
+    std::cout<< "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value<<std::endl;
     ASSERT(0, "Cannot make agreement!"<< "value:" << value << " "<<"commit value:" << test_value );
     return -1;
 }

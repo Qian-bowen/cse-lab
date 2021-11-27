@@ -1,4 +1,4 @@
-END=40
+END=100
 ## print date five times ##
 x=$END 
 echo "" > output1.txt
