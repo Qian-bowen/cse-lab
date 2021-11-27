@@ -241,7 +241,11 @@ template<typename state_machine, typename command>
 void raft<state_machine, command>::start() {
     // Your code here:
     // set time when start
-    last_receive_rpc_time=get_current_time();
+    // make sure not all candidate can start election at sametime
+    // lower boundary of election timeout is 300, and randomize timeout for each node from 300-500
+    // so the first election will start between 0-200 ms from beginning
+    // part2 basic_agree test has 300ms for us to select a leader, that is enough
+    last_receive_rpc_time=get_current_time()-300;
     #ifdef DEBUG
     RAFT_LOG("start");
     #endif
@@ -375,6 +379,7 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
 
                     next_index.resize(next_index.size(),log.size());
                     match_index.resize(match_index.size(),0);
+                    
                 }
             }
         }
