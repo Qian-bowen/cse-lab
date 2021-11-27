@@ -16,7 +16,7 @@
 #include "raft_state_machine.h"
 
 #define DEBUG
-#define JUDGE
+// #define JUDGE
 
 template<typename state_machine, typename command>
 class raft {
@@ -371,9 +371,7 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
                     #ifdef DEBUG
                     RAFT_LOG("node:%d become leader role:%d in term:%d",this->my_id,this->get_role(),this->current_term);
                     #endif
-                    // RAFT_LOG("node:%d become leader role:%d in term:%d",this->my_id,this->get_role(),this->current_term);
-                    // Reinitialized after election
-                    // next index initialize to leader last log index + 1, namely log.size()-1+1
+
                     next_index.resize(next_index.size(),log.size());
                     match_index.resize(match_index.size(),0);
                 }
@@ -425,16 +423,6 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
             reply.success=false;
         }
 
-  
-        /**
-         * @brief If an existing entry conflicts with a new one (same index but different terms), 
-         * delete the existing entry and all that follow it
-         * Append any new entries not already in the log
-         */
-
-
-
-        // append any new
         
         // can only modify log when success
         if(reply.success&&(int)arg.entries.size()>0)
@@ -618,35 +606,30 @@ void raft<state_machine, command>::run_background_election() {
                 ((this->get_role()==raft_role::follower)
                 && (now-this->last_receive_rpc_time>get_election_timeout())))
             {
-                /**
-                 * @brief start an election if only the majority is reachable
-                 * imagine
-                 */
-                if(is_majority_reachable(this->rpc_clients))
-                {
-                    // begin new election if no heartbeat or election timeout
-                    reset_election_timeout();
-                    reset_candidate_election_timeout();
-            
-                    last_election_begin_time=get_current_time();
-                    // as a follower start election
-                    this->current_term++;
-                    // become candidate
-                    #ifdef DEBUG
-                    RAFT_LOG("node:%d become candidate",this->my_id);
-                    #endif
-                    this->set_role(raft_role::candidate);
-                    //vote for itself
-                    this->vote_receive=1;
-                    this->voted_for=my_id;
-                    request_vote_args args(this->current_term,this->my_id,this->log.size()-1,this->log.back().term);
+                // no prevote here
+                // begin new election if no heartbeat or election timeout
+                reset_election_timeout();
+                reset_candidate_election_timeout();
+        
+                last_election_begin_time=get_current_time();
+                // as a follower start election
+                // important?
+                this->current_term++;
+                // become candidate
+                #ifdef DEBUG
+                RAFT_LOG("node:%d become candidate",this->my_id);
+                #endif
+                this->set_role(raft_role::candidate);
+                //vote for itself
+                this->vote_receive=1;
+                this->voted_for=my_id;
+                request_vote_args args(this->current_term,this->my_id,this->log.size()-1,this->log.back().term);
 
-                    int node_num=this->num_nodes();
-                    for(int i=0;i<node_num;++i)
-                    {
-                        if(i==this->my_id) continue;
-                        thread_pool->addObjJob(this, &raft::send_request_vote, i, args);
-                    }
+                int node_num=this->num_nodes();
+                for(int i=0;i<node_num;++i)
+                {
+                    if(i==this->my_id) continue;
+                    thread_pool->addObjJob(this, &raft::send_request_vote, i, args);
                 }
             }
         }
@@ -654,9 +637,7 @@ void raft<state_machine, command>::run_background_election() {
         // mtx.unlock();
         
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }    
-    
-
+    }
     return;
 }
 
@@ -831,29 +812,29 @@ int raft<state_machine, command>::majority_element(std::vector<int>& nums,bool& 
     return cand;
 }
 
-
-/**
- * @brief whether the node can reach the majority
- * @tparam state_machine 
- * @tparam command 
- * @param clients 
- * @return true 
- * @return false 
- */
-template<typename state_machine, typename command>
-bool raft<state_machine, command>::is_majority_reachable(std::vector<rpcc*>& clients)
-{
-    int cnt=0;
-    for(const auto& client:clients)
-    {
-        if(client->reachable()) cnt++;
-    }
-    if(cnt>num_nodes()/2)
-    {
-        return true;
-    }
-    return false;
-}
+// not handle prevote something wrong with partition
+// /**
+//  * @brief whether the node can reach the majority
+//  * @tparam state_machine 
+//  * @tparam command 
+//  * @param clients 
+//  * @return true 
+//  * @return false 
+//  */
+// template<typename state_machine, typename command>
+// bool raft<state_machine, command>::is_majority_reachable(std::vector<rpcc*>& clients)
+// {
+//     int cnt=0;
+//     for(const auto& client:clients)
+//     {
+//         if(client->reachable()) cnt++;
+//     }
+//     if(cnt>num_nodes()/2)
+//     {
+//         return true;
+//     }
+//     return false;
+// }
 
 
 

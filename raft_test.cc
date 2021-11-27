@@ -339,16 +339,6 @@ TEST_CASE(part2, backup, "Leader backs up quickly over incorrect follower logs")
 
 
     std::cout<<"label 5"<<std::endl;
-
-    // test
-    // int t = group->check_exact_one_leader();
-
-    // if(t!=other)
-    // {
-    //     std::cerr<<"leader error"<<std::endl;
-    //     std::cout<<"leader error"<<"--------------"<<std::endl;
-    // }
-    // test end
     
 
 	// now everyone

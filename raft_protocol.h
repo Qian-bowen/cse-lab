@@ -29,13 +29,6 @@ public:
     request_vote_args(int term_,int candidate_id_,int last_log_index_,int last_log_term_)
         :term(term_),candidate_id(candidate_id_),last_log_index(last_log_index_),last_log_term(last_log_term_){}
     request_vote_args()=default;
-    // request_vote_args(const request_vote_args& r)
-    // {
-    //     this->term=r.term;
-    //     this->candidate_id=r.candidate_id;
-    //     this->last_log_index=r.last_log_index;
-    //     this->last_log_term=r.last_log_term;
-    // }
 };
 
 marshall& operator<<(marshall &m, const request_vote_args& args);
