@@ -189,7 +189,8 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     next_index.resize(rpc_clients.size(),1);
     match_index.resize(rpc_clients.size(),0);
     log.push_back(log_entry<command>(0)); // log index begin from zero ,so add empty entry
-    // wrong code to be deleted
+    
+    storage->set_filename(my_id);
 }
 
 template<typename state_machine, typename command>
@@ -708,7 +709,8 @@ void raft<state_machine, command>::run_background_apply() {
         if (is_stopped()) return;
         {
             std::unique_lock<std::mutex> lock(mtx);
-            if(commit_index>last_applied)
+            // attention! cannot use if! when you release lock, other node may becomes leader!
+            while(commit_index>last_applied)
             {
                 last_applied++;
                 #ifdef JUDGE
