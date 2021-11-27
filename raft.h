@@ -311,6 +311,8 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
             #endif
             voted_for=-1;
             // reply.vote_granted=true;
+            // voted_for=args.candidate_id;
+            // reply.vote_granted=true;
         }
         //  If votedFor is null or candidateId, and candidate’s log is at least as up-to-date as receiver’s log, grant vote
         // decide to vote
@@ -422,8 +424,19 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
             #endif
             reply.success=false;
         }
-            
-        // important!!! a heartbeat may appended entry 
+
+  
+        /**
+         * @brief If an existing entry conflicts with a new one (same index but different terms), 
+         * delete the existing entry and all that follow it
+         * Append any new entries not already in the log
+         */
+
+
+
+        // append any new
+        
+        // can only modify log when success
         if(reply.success&&(int)arg.entries.size()>0)
         {
             log.erase(log.begin()+1+arg.prev_log_index,log.end());
@@ -443,7 +456,7 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
          * not success and commit index of C should still be 6
          */
         #ifdef JUDGE
-        assert( (!reply.success) || (arg.leader_commit>=commit_index));
+        // assert( (!reply.success) || (arg.leader_commit>=commit_index));
         #endif
         
         if(reply.success && (arg.leader_commit>commit_index))
@@ -609,7 +622,7 @@ void raft<state_machine, command>::run_background_election() {
                  * @brief start an election if only the majority is reachable
                  * imagine
                  */
-                // if(is_majority_reachable(this->rpc_clients))
+                if(is_majority_reachable(this->rpc_clients))
                 {
                     // begin new election if no heartbeat or election timeout
                     reset_election_timeout();
@@ -821,7 +834,6 @@ int raft<state_machine, command>::majority_element(std::vector<int>& nums,bool& 
 
 /**
  * @brief whether the node can reach the majority
- * 
  * @tparam state_machine 
  * @tparam command 
  * @param clients 
