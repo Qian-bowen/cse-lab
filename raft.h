@@ -15,7 +15,7 @@
 #include "raft_protocol.h"
 #include "raft_state_machine.h"
 
-#define DEBUG
+// #define DEBUG
 // #define JUDGE
 
 template<typename state_machine, typename command>
@@ -145,7 +145,7 @@ private:
     // Attention! too much node may have conflict
     inline void reset_election_timeout(){this->election_timeout=300+rand()%200;}
     inline unsigned long get_election_timeout(){return this->election_timeout;}
-    inline void reset_candidate_election_timeout(){this->candidate_election_timeout=900+(10*my_id)%200;}
+    inline void reset_candidate_election_timeout(){this->candidate_election_timeout=900+rand()%200;}
     inline unsigned long get_candidate_election_timeout(){return this->candidate_election_timeout;}
     int majority_element(std::vector<int>& nums,bool& have_result);
     bool is_majority_reachable(std::vector<rpcc*>& clients);
@@ -190,7 +190,7 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     match_index.resize(rpc_clients.size(),0);
     log.push_back(log_entry<command>(0)); // log index begin from zero ,so add empty entry
     
-    storage->set_filename(my_id);
+    storage->set_filename(idx);
 }
 
 template<typename state_machine, typename command>
@@ -240,6 +240,8 @@ bool raft<state_machine, command>::is_leader(int &term) {
 template<typename state_machine, typename command>
 void raft<state_machine, command>::start() {
     // Your code here:
+    // set time when start
+    last_receive_rpc_time=get_current_time();
     #ifdef DEBUG
     RAFT_LOG("start");
     #endif
@@ -332,9 +334,7 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
             }
         }
         
-
-        // important! update receive rpc time!
-        this->last_receive_rpc_time=this->get_current_time();
+        // do not update rpc time there , not every one request for vote will become leader
     }
     // mtx.unlock();
     return 0;
@@ -607,6 +607,8 @@ void raft<state_machine, command>::run_background_election() {
                 ((this->get_role()==raft_role::follower)
                 && (now-this->last_receive_rpc_time>get_election_timeout())))
             {
+                // printf("time last election begin:%llu last_election:%lld\n",now-this->last_election_begin_time,this->last_election_begin_time);
+                // printf("time last rpc begin:%llu\n last_rpc:%lld",now-this->last_receive_rpc_time,this->last_receive_rpc_time);
                 // no prevote here
                 // begin new election if no heartbeat or election timeout
                 reset_election_timeout();
@@ -709,7 +711,7 @@ void raft<state_machine, command>::run_background_apply() {
         if (is_stopped()) return;
         {
             std::unique_lock<std::mutex> lock(mtx);
-            // attention! cannot use if! when you release lock, other node may becomes leader!
+            // attention! use while ?
             while(commit_index>last_applied)
             {
                 last_applied++;
