@@ -66,7 +66,7 @@ raft_storage<command>::~raft_storage() {
 /**
  * @brief 
  * meta-file(binary):current_term(int),voted_for(int),log num(int)
- * data-file(binary):log(term cmd)
+ * data-file(binary):log(term size cmd)
  * store empty log
  * log num is add because if lots log are added to file at first, add delete something at last,the file size won't become small
  * @tparam command 
@@ -76,6 +76,7 @@ raft_storage<command>::~raft_storage() {
 template<typename command>
 void raft_storage<command>::recovery(int& current_term,int& voted_for,std::vector<log_entry<command>>& recovery_log)
 {
+    std::unique_lock<std::mutex> lock(mtx);
     #ifdef DEBUG
     std::cout<<"node:"<<my_id<<"recovery start"<<std::endl;
     #endif
@@ -116,7 +117,7 @@ void raft_storage<command>::recovery(int& current_term,int& voted_for,std::vecto
         char* buf=new char[cmd_size];
         cmd.serialize(buf,cmd_size);
         data.write(buf,cmd_size);
-        delete [] buf; //must use delete [] according to c++ standard 
+        delete [] buf; //must use delete [] according to c++ standard , otherwise may lead to undefined behaviour
 
         recovery_log.push_back(empty);
 
@@ -151,13 +152,18 @@ void raft_storage<command>::recovery(int& current_term,int& voted_for,std::vecto
         int cnt=0;
         while(!data.eof()&&cnt<log_num)
         {
-            int cur_term;
-            command cur_cmd;
-            int cmd_size=cur_cmd.size();
-            char* buf=new char[cmd_size];
+            int cur_term,cmd_size;
+
             data.read(reinterpret_cast<char *>(&cur_term), sizeof(cur_term));
+            data.read(reinterpret_cast<char *>(&cmd_size), sizeof(cmd_size));
+
+            char* buf=new char[cmd_size];
+
+            command cur_cmd;
+            
             data.read(buf,cmd_size);
             cur_cmd.deserialize(buf,cmd_size);
+            
             delete [] buf;
 
             #ifdef DEBUG
@@ -176,6 +182,8 @@ void raft_storage<command>::recovery(int& current_term,int& voted_for,std::vecto
     {
         assert(0);
     }
+    assert(!recovery_log.empty());
+
     meta.flush();
     data.flush();
     #ifdef DEBUG
@@ -239,6 +247,7 @@ void raft_storage<command>::persist_log(std::vector<log_entry<command>> log)
         data.write(reinterpret_cast<const char *>(&entry.term), sizeof(entry.term));
         command cmd=entry.cmd;
         int cmd_size=cmd.size();
+        data.write(reinterpret_cast<const char *>(&cmd_size), sizeof(cmd_size));
         char* buf=new char[cmd_size];
         cmd.serialize(buf,cmd_size);
         data.write(buf,cmd_size);

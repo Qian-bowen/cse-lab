@@ -261,7 +261,6 @@ void raft<state_machine, command>::start() {
 template<typename state_machine, typename command>
 bool raft<state_machine, command>::new_command(command cmd, int &term, int &index) {
     std::unique_lock<std::mutex> lock(mtx);
-
     bool is_leader_reachable=false;
     {
         // leader and half reachable
@@ -330,6 +329,9 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
         //  If votedFor is null or candidateId, and candidate’s log is at least as up-to-date as receiver’s log, grant vote
         // decide to vote
         // if my log is newer, refuse to vote
+        
+        assert(!log.empty());
+
         if((log.back().term<args.last_log_term)
             ||((log.back().term==args.last_log_term)&&((int)log.size()-1<=args.last_log_index)))
         {
@@ -466,8 +468,15 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
             }
             std::cout<<std::endl;
             #endif
-            log.erase(log.begin()+1+arg.prev_log_index,log.end());
+
+            assert(!log.empty());
+
+            if(log.begin()+1+arg.prev_log_index<log.end())
+            {
+                log.erase(log.begin()+1+arg.prev_log_index,log.end());
+            }
             log.insert(log.end(),arg.entries.begin(),arg.entries.end());
+
             #ifdef DEBUG
             std::cout<<"node:"<<my_id<<" after update content:";
             for(const auto& s:log)
@@ -797,7 +806,7 @@ void raft<state_machine, command>::run_background_ping() {
     // Send empty append_entries RPC to the followers.
 
     // Only work for the leader.
-    const unsigned long ping_timeout=100;
+    const unsigned long ping_timeout=150;
     while (true) {
         if (is_stopped()) return;
         {
