@@ -189,10 +189,10 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     next_index.resize(rpc_clients.size(),1);
     match_index.resize(rpc_clients.size(),0);
 
-    storage->set_filename(idx);
-
     // push empty before recovery
-    log.push_back(log_entry<command>(0)); // log index begin from zero ,so add empty entry
+    // log.push_back(log_entry<command>(0)); // log index begin from zero ,so add empty entry
+    // empy log is added when recovery
+    storage->set_node_info(my_id);
     storage->recovery(current_term,voted_for,log);
 }
 
@@ -270,6 +270,7 @@ bool raft<state_machine, command>::new_command(command cmd, int &term, int &inde
         if(is_leader_reachable)
         {
             log.push_back(log_entry<command>(this->current_term,cmd));
+            storage->persist_log(log);
             #ifdef DEBUG
             RAFT_LOG("leader receive cmd max index:%d value:%d",(int)log.size()-1,cmd.value);
             #endif
@@ -314,12 +315,14 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
         else if(args.term>this->current_term)
         {
             this->current_term=args.term;
+            storage->persist_current_term(current_term);
             set_role(raft_role::follower);
             // must not return here
             #ifdef DEBUG
             RAFT_LOG("node:%d in request_vote become follower request term:%d",this->my_id,args.term);
             #endif
             voted_for=-1;
+            storage->persist_voted_for(voted_for);
             // reply.vote_granted=true;
             // voted_for=args.candidate_id;
             // reply.vote_granted=true;
@@ -337,6 +340,7 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
                 #endif
             
                 voted_for=args.candidate_id;
+                storage->persist_voted_for(voted_for);
                 reply.vote_granted=true;
             }
         }
@@ -355,11 +359,13 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
         if(reply.term>this->current_term)
         {
             this->current_term=reply.term;
+            storage->persist_current_term(current_term);
             set_role(raft_role::follower);
             #ifdef DEBUG
             RAFT_LOG("node:%d in handle_request_vote_reply become follower",this->my_id);
             #endif
             voted_for=-1;
+            storage->persist_voted_for(voted_for);
         }
 
         if(this->get_role()==raft_role::candidate)
@@ -419,11 +425,13 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
         if(arg.term>this->current_term)
         {
             this->current_term=arg.term;
+            storage->persist_current_term(current_term);
             set_role(raft_role::follower);
             #ifdef DEBUG
             RAFT_LOG("node:%d become follower",this->my_id);
             #endif
             voted_for=-1;//new 
+            storage->persist_voted_for(voted_for);
         }
 
         #ifdef JUDGE
@@ -450,8 +458,25 @@ int raft<state_machine, command>::append_entries(append_entries_args<command> ar
         // can only modify log when success
         if(reply.success&&(int)arg.entries.size()>0)
         {
+            #ifdef DEBUG
+            std::cout<<"node:"<<my_id<<" before update content:";
+            for(const auto& s:log)
+            {
+                std::cout<<s.term<<":"<<s.cmd.value<<" ";
+            }
+            std::cout<<std::endl;
+            #endif
             log.erase(log.begin()+1+arg.prev_log_index,log.end());
             log.insert(log.end(),arg.entries.begin(),arg.entries.end());
+            #ifdef DEBUG
+            std::cout<<"node:"<<my_id<<" after update content:";
+            for(const auto& s:log)
+            {
+                std::cout<<s.term<<":"<<s.cmd.value<<" ";
+            }
+            std::cout<<std::endl;
+            #endif
+            storage->persist_log(log);
         }
 
         #ifdef DEBUG
@@ -509,8 +534,10 @@ void raft<state_machine, command>::handle_append_entries_reply(int target, const
             RAFT_LOG("node:%d in handle_append_entries_reply become follower",this->my_id);
             #endif
             this->current_term=reply.term;
+            storage->persist_current_term(current_term);
             this->set_role(raft_role::follower);
             voted_for=-1;//new 
+            storage->persist_voted_for(voted_for);
         }
 
         // RAFT_LOG("handle entry reply target:%d term:%d success:%d",target,reply.term,reply.success);
@@ -640,6 +667,7 @@ void raft<state_machine, command>::run_background_election() {
                 // as a follower start election
                 // important?
                 this->current_term++;
+                storage->persist_current_term(current_term);
                 // become candidate
                 #ifdef DEBUG
                 RAFT_LOG("node:%d become candidate",this->my_id);
@@ -648,6 +676,7 @@ void raft<state_machine, command>::run_background_election() {
                 //vote for itself
                 this->vote_receive=1;
                 this->voted_for=my_id;
+                storage->persist_voted_for(voted_for);
                 request_vote_args args(this->current_term,this->my_id,this->log.size()-1,this->log.back().term);
 
                 int node_num=this->num_nodes();
@@ -703,6 +732,18 @@ void raft<state_machine, command>::run_background_commit() {
                         send_log.insert(send_log.begin(),log.begin()+next_index[i],log.end());
                         #ifdef DEBUG
                         RAFT_LOG("send log entry num:%d to %d",(int)send_log.size(),i);
+                         std::cout<<"node:"<<my_id<<" now log content:";
+                        for(const auto& s:log)
+                        {
+                            std::cout<<s.term<<":"<<s.cmd.value<<" ";
+                        }
+                        std::cout<<std::endl;
+                        std::cout<<"node:"<<my_id<<" send content:";
+                        for(const auto& s:send_log)
+                        {
+                            std::cout<<s.term<<":"<<s.cmd.value<<" ";
+                        }
+                        std::cout<<std::endl;
                         #endif
                         #ifdef JUDGE
                         assert((next_index[i]-1<(int)log.size())&&(next_index[i]-1>=0));
