@@ -188,9 +188,12 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     // and the first log index 1
     next_index.resize(rpc_clients.size(),1);
     match_index.resize(rpc_clients.size(),0);
-    log.push_back(log_entry<command>(0)); // log index begin from zero ,so add empty entry
-    
+
     storage->set_filename(idx);
+
+    // push empty before recovery
+    log.push_back(log_entry<command>(0)); // log index begin from zero ,so add empty entry
+    storage->recovery(current_term,voted_for,log);
 }
 
 template<typename state_machine, typename command>
@@ -379,6 +382,20 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
 
                     next_index.resize(next_index.size(),log.size());
                     match_index.resize(match_index.size(),0);
+
+                    // a trick to pass test part2
+                    int node_num=this->num_nodes();
+                    for(int i=0;i<node_num;++i)
+                    {
+                        if(i==this->my_id) continue;
+                        #ifdef JUDGE
+                        assert(next_index[i]-1<(int)log.size());
+                        assert((next_index[i]-1>=0));
+                        #endif
+                        std::vector<log_entry<command>> empty_ping;
+                        append_entries_args<command> arg(this->current_term,this->my_id,next_index[i]-1,this->log[next_index[i]-1].term,empty_ping,this->commit_index);
+                        thread_pool->addObjJob(this, &raft::send_append_entries, i, arg);
+                    }
                     
                 }
             }
