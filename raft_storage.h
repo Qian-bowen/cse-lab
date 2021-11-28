@@ -116,6 +116,7 @@ void raft_storage<command>::recovery(int& current_term,int& voted_for,std::vecto
         char* buf=new char[cmd_size];
         cmd.serialize(buf,cmd_size);
         data.write(buf,cmd_size);
+        delete [] buf; //must use delete [] according to c++ standard 
 
         recovery_log.push_back(empty);
 
@@ -157,7 +158,7 @@ void raft_storage<command>::recovery(int& current_term,int& voted_for,std::vecto
             data.read(reinterpret_cast<char *>(&cur_term), sizeof(cur_term));
             data.read(buf,cmd_size);
             cur_cmd.deserialize(buf,cmd_size);
-            delete buf;
+            delete [] buf;
 
             #ifdef DEBUG
             std::cout<<cur_term<<":"<<cur_cmd.value<<" ";
@@ -241,7 +242,7 @@ void raft_storage<command>::persist_log(std::vector<log_entry<command>> log)
         char* buf=new char[cmd_size];
         cmd.serialize(buf,cmd_size);
         data.write(buf,cmd_size);
-        delete buf;
+        delete [] buf;
         
         #ifdef DEBUG
         std::cout<<entry.term<<":"<<entry.cmd.value<<" ";
