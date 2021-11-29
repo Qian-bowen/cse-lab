@@ -656,12 +656,10 @@ void raft<state_machine, command>::run_background_election() {
                 // restart election
                 this->set_role(raft_role::follower);
                 this->last_receive_rpc_time=get_current_time();
+                // must reset election timeout
+                // vote split means the candidate's election timeout is same as another one
+                reset_election_timeout();
             }
-            // if(((this->get_role()==raft_role::candidate)
-            //     && (now-last_election_begin_time>get_candidate_election_timeout()))
-            //     ||
-            //     ((this->get_role()==raft_role::follower)
-            //     && (now-this->last_receive_rpc_time>get_election_timeout())))
 
             if((this->get_role()==raft_role::follower)
                 && (now-this->last_receive_rpc_time>get_election_timeout()))
