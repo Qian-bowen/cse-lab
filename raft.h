@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <thread>
 #include <stdarg.h>
+#include <limits.h>
 
 #include "rpc.h"
 #include "raft_storage.h"
@@ -146,6 +147,7 @@ private:
     inline void reset_election_timeout(){this->election_timeout=300+rand()%200;}
     inline unsigned long get_election_timeout(){return this->election_timeout;}
     inline void reset_candidate_election_timeout(){this->candidate_election_timeout=900+rand()%200;}
+    // inline void reset_candidate_election_timeout(){this->candidate_election_timeout=1000;}
     inline unsigned long get_candidate_election_timeout(){return this->candidate_election_timeout;}
     int majority_element(std::vector<int>& nums,bool& have_result);
     bool is_majority_reachable(std::vector<rpcc*>& clients);
@@ -172,7 +174,7 @@ raft<state_machine, command>::raft(rpcs* server, std::vector<rpcc*> clients, int
     last_receive_rpc_time(0),
     vote_receive(0),
     voted_for(-1),
-    last_election_begin_time(0)
+    last_election_begin_time(ULLONG_MAX)
 {
     thread_pool = new ThrPool(32);
 
@@ -347,7 +349,8 @@ int raft<state_machine, command>::request_vote(request_vote_args args, request_v
             }
         }
         
-        // do not update rpc time there , not every one request for vote will become leader
+        // modify!
+        last_receive_rpc_time=get_current_time();
     }
     // mtx.unlock();
     return 0;
@@ -391,20 +394,7 @@ void raft<state_machine, command>::handle_request_vote_reply(int target, const r
                     next_index.resize(next_index.size(),log.size());
                     match_index.resize(match_index.size(),0);
 
-                    // a trick to pass test part2
-                    int node_num=this->num_nodes();
-                    for(int i=0;i<node_num;++i)
-                    {
-                        if(i==this->my_id) continue;
-                        #ifdef JUDGE
-                        assert(next_index[i]-1<(int)log.size());
-                        assert((next_index[i]-1>=0));
-                        #endif
-                        std::vector<log_entry<command>> empty_ping;
-                        append_entries_args<command> arg(this->current_term,this->my_id,next_index[i]-1,this->log[next_index[i]-1].term,empty_ping,this->commit_index);
-                        thread_pool->addObjJob(this, &raft::send_append_entries, i, arg);
-                    }
-                    
+                    // thread_pool->addObjJob can NEVER use there , check destroy() in thr_pool.cc for more detail
                 }
             }
         }
@@ -650,6 +640,7 @@ void raft<state_machine, command>::run_background_election() {
     //        Actually, the timeout should be different between the follower (e.g. 300-500ms) and the candidate (e.g. 1s).
 
     reset_election_timeout();
+    reset_candidate_election_timeout();
     
     while (true) {
         if (is_stopped()) return;
@@ -659,11 +650,21 @@ void raft<state_machine, command>::run_background_election() {
             unsigned long now=this->get_current_time();
 
             // cannot start new election until timeout
-            if(((this->get_role()==raft_role::candidate)
+            if((this->get_role()==raft_role::candidate)
                 && (now-last_election_begin_time>get_candidate_election_timeout()))
-                ||
-                ((this->get_role()==raft_role::follower)
-                && (now-this->last_receive_rpc_time>get_election_timeout())))
+            {
+                // restart election
+                this->set_role(raft_role::follower);
+                this->last_receive_rpc_time=get_current_time();
+            }
+            // if(((this->get_role()==raft_role::candidate)
+            //     && (now-last_election_begin_time>get_candidate_election_timeout()))
+            //     ||
+            //     ((this->get_role()==raft_role::follower)
+            //     && (now-this->last_receive_rpc_time>get_election_timeout())))
+
+            if((this->get_role()==raft_role::follower)
+                && (now-this->last_receive_rpc_time>get_election_timeout()))
             {
                 // printf("time last election begin:%llu last_election:%lld\n",now-this->last_election_begin_time,this->last_election_begin_time);
                 // printf("time last rpc begin:%llu\n last_rpc:%lld",now-this->last_receive_rpc_time,this->last_receive_rpc_time);
