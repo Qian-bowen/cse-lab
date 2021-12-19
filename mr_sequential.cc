@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <regex>
 
 using namespace std;
 
@@ -28,7 +29,20 @@ vector<KeyVal> Map(const string &filename, const string &content)
 {
     // Your code goes here
     // Hints: split contents into an array of words.
-
+    vector<KeyVal> kv;
+    regex word_regex("([a-zA-Z]+)");
+    auto words_begin=sregex_iterator(content.begin(),content.end(),word_regex);
+    auto words_end=sregex_iterator();
+    for(auto i=words_begin;i!=words_end;++i)
+    {
+        smatch match=*i;
+        string key=match.str();
+        KeyVal tmp;
+        tmp.key=key;
+        tmp.val="1";
+        kv.push_back(tmp);
+    }
+    return kv;
 }
 
 //
@@ -40,7 +54,12 @@ string Reduce(const string &key, const vector <string> &values)
 {
     // Your code goes here
     // Hints: return the number of occurrences of the word.
-
+    int result=0;
+    for(auto& value:values)
+    {
+        result+=stoi(value);
+    }
+    return to_string(result);
 }
 
 int main(int argc, char ** argv)
@@ -58,7 +77,6 @@ int main(int argc, char ** argv)
     // pass it to Map,
     // accumulate the intermediate Map output.
     //
-
     for (int i = 1; i < argc; ++i) {
 
         string filename = argv[i];

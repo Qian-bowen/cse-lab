@@ -73,6 +73,9 @@ public:
     virtual int size() const override;
     virtual void serialize(char* buf, int size) const override;
     virtual void deserialize(const char* buf, int size);
+
+    static int type_to_int(command_type type);
+    static command_type int_to_type(int integer);
 };
 
 marshall& operator<<(marshall &m, const kv_command& cmd);
@@ -80,6 +83,7 @@ unmarshall& operator>>(unmarshall &u, kv_command& cmd);
 
 class kv_state_machine : public raft_state_machine {
 public:
+    kv_state_machine();
     virtual ~kv_state_machine();
 
     // Apply a log to the state machine.
@@ -89,6 +93,8 @@ public:
     virtual std::vector<char> snapshot() override;
     // Apply the snapshot to the state mahine.
     virtual void apply_snapshot(const std::vector<char>&) override;
+
+    std::map<std::string,kv_command> store;
 };
 
 #endif // raft_state_machine_h

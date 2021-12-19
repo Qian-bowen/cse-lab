@@ -5,6 +5,7 @@
 //#include "chfs_protocol.h"
 #include "extent_client.h"
 #include <vector>
+#include <list>
 
 
 class chfs_client {
@@ -29,17 +30,28 @@ class chfs_client {
   struct dirent {
     std::string name;
     chfs_client::inum inum;
+    dirent(){}
+    dirent(std::string name,chfs_client::inum inum)
+    {
+      this->name=name;
+      this->inum=inum;
+    }
   };
 
  private:
   static std::string filename(inum);
   static inum n2i(std::string);
+  static std::string make_dir_entry(inum num,std::string filename);
 
  public:
-  chfs_client(std::string);
+  chfs_client();
+  chfs_client(std::string port_extent_server);
+
+  int increase_time_of_dir_file(inum num);
 
   bool isfile(inum);
   bool isdir(inum);
+  bool issymlink(inum inum);
 
   int getfile(inum, fileinfo &);
   int getdir(inum, dirinfo &);
@@ -52,6 +64,9 @@ class chfs_client {
   int read(inum, size_t, off_t, std::string &);
   int unlink(inum,const char *);
   int mkdir(inum , const char *, mode_t , inum &);
+
+  int create_symbolic_link(inum parent,const char *link,const char *name,inum & ino);
+  int readlink(inum ino,std::string& link);
   
   /** you may need to add symbolic link related methods here.*/
 };

@@ -90,20 +90,27 @@ TEST_CASE(part2, fail_agree, "Fail Agreement")
     list_raft_group* group = new list_raft_group(3);
 
     group->append_new_command(101, num_nodes);
+    // std::cerr<<"label-1 "<<std::endl;
     int leader = group->check_exact_one_leader();
     group->disable_node(leader);
-
+    // std::cerr<<"label0 "<<std::endl;
     group->append_new_command(102, num_nodes - 1);
+    // std::cerr<<"label1 "<<std::endl;
     group->append_new_command(103, num_nodes - 1);
+    // std::cerr<<"label2 "<<std::endl;
     mssleep(1000);
     group->append_new_command(104, num_nodes - 1);
+    // std::cerr<<"label3 "<<std::endl;
     group->append_new_command(105, num_nodes - 1);
+    // std::cerr<<"label4 "<<std::endl;
 
     group->enable_node(leader);
 
     group->append_new_command(106, num_nodes);
+    // std::cerr<<"label5 "<<std::endl;
     mssleep(1000);
     group->append_new_command(107, num_nodes);
+    // std::cerr<<"label6 "<<std::endl;
 
     delete group;
 }
@@ -272,6 +279,8 @@ TEST_CASE(part2, backup, "Leader backs up quickly over incorrect follower logs")
 
     group->append_new_command(value++, num_nodes);
 
+    std::cout<<"label 1"<<std::endl;
+
     // put leader and one follower in a partition
     int leader1 = group->check_exact_one_leader();
     group->disable_node((leader1 + 2) % num_nodes);
@@ -283,6 +292,7 @@ TEST_CASE(part2, backup, "Leader backs up quickly over incorrect follower logs")
     for (int i = 0; i < 50; i++)
         group->nodes[leader1]->new_command(list_command(value++), temp_term, temp_index);
     
+    std::cout<<"label 2"<<std::endl;
 
     mssleep(500);
 
@@ -298,6 +308,7 @@ TEST_CASE(part2, backup, "Leader backs up quickly over incorrect follower logs")
     for (int i = 0; i < 50; i++) 
         group->append_new_command(value++, 3);
     
+    std::cout<<"label 3"<<std::endl;
 
 	// now another partitioned leader and one follower
     int leader2 = group->check_exact_one_leader();
@@ -310,6 +321,8 @@ TEST_CASE(part2, backup, "Leader backs up quickly over incorrect follower logs")
     for (int i = 0; i < 50; i++)
         group->nodes[leader2]->new_command(list_command(value++), temp_term, temp_index);
 
+    std::cout<<"label 4"<<std::endl;
+
     mssleep(500);
 
 	// bring original leader back to life,
@@ -319,9 +332,13 @@ TEST_CASE(part2, backup, "Leader backs up quickly over incorrect follower logs")
     group->enable_node((leader1 + 1) % num_nodes);
     group->enable_node(other);
 
+
 	// lots of successful commands to new group.
     for (int i = 0; i < 50; i++) 
         group->append_new_command(value++, 3);
+
+
+    std::cout<<"label 5"<<std::endl;
     
 
 	// now everyone

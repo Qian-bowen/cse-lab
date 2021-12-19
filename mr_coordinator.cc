@@ -48,13 +48,79 @@ private:
 
 mr_protocol::status Coordinator::askTask(int, mr_protocol::AskTaskResponse &reply) {
 	// Lab2 : Your code goes here.
+	//TODO: add lock when checking
+	int task_num=0;
+	if(!isFinishedMap())
+	{
+		for(auto& task:mapTasks)
+		{
+			mtx.lock();
+			if(task.isAssigned==false)
+			{
+				task.isAssigned=true;
+				mtx.unlock();
+				reply.task_num=task_num;
+				reply.index=task.index;
+				reply.filename=files[task.index];
+				reply.task_type=mr_tasktype::MAP;
+				return mr_protocol::OK;
+			}
+			mtx.unlock();
+		}
+		return mr_protocol::OK;
+	}
+	else if(!isFinishedReduce())
+	{
+		for(auto& task:reduceTasks)
+		{
+			mtx.lock();
+			if(task.isAssigned==false)
+			{
+				task.isAssigned=true;
+				mtx.unlock();
+				reply.task_num=task_num;
+				reply.index=task.index;
+				reply.task_type=mr_tasktype::REDUCE;
+				return mr_protocol::OK;
+			}
+			mtx.unlock();
+		}
+		return mr_protocol::OK;
+	}
 
+	reply.index=-1;
+	reply.task_type=mr_tasktype::NONE;
 	return mr_protocol::OK;
 }
 
 mr_protocol::status Coordinator::submitTask(int taskType, int index, bool &success) {
 	// Lab2 : Your code goes here.
-
+	if(taskType==mr_tasktype::MAP)
+	{
+		if(index>=mapTasks.size())
+		{
+			success=false;
+			return mr_protocol::IOERR;
+		}
+		mtx.lock();
+		mapTasks[index].isCompleted=true;
+		success=true;
+		completedMapCount++;
+		mtx.unlock();
+	}
+	else if(taskType==mr_tasktype::REDUCE)
+	{
+		if(index>=reduceTasks.size())
+		{
+			success=false;
+			return mr_protocol::IOERR;
+		}
+		mtx.lock();
+		reduceTasks[index].isCompleted=true;
+		success=true;
+		completedReduceCount++;
+		mtx.unlock();
+	}
 	return mr_protocol::OK;
 }
 
@@ -149,6 +215,9 @@ int main(int argc, char *argv[])
 	// Lab2: Your code here.
 	// Hints: Register "askTask" and "submitTask" as RPC handlers here
 	// 
+
+	server.reg(mr_protocol::asktask,&c,&Coordinator::askTask);
+	server.reg(mr_protocol::submittask,&c,&Coordinator::submitTask);
 
 	while(!c.Done()) {
 		sleep(1);
