@@ -68,4 +68,5 @@ private:
 
     chdb *db;
     const int tx_id;
+
 };

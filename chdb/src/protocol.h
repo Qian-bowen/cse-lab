@@ -27,6 +27,9 @@ namespace chdb_protocol {
         int tx_id;
         int key;
         int value;
+
+        operation_var(){}
+        operation_var(int tx_id_,int key_,int value_):tx_id(tx_id_),key(key_),value(value_){}
     };
 
     class dummy_var {
@@ -38,21 +41,32 @@ namespace chdb_protocol {
     class prepare_var {
     public:
         int tx_id;
+        prepare_var(){}
+        prepare_var(int tx_id_):tx_id(tx_id_){}
     };
 
     class check_prepare_state_var {
     public:
         int tx_id;
+
+        check_prepare_state_var(){}
+        check_prepare_state_var(int tx_id_):tx_id(tx_id_){}
     };
 
     class commit_var {
     public:
         int tx_id;
+
+        commit_var(){}
+        commit_var(int tx_id_):tx_id(tx_id_){}
     };
 
     class rollback_var {
     public:
         int tx_id;
+
+        rollback_var(){}
+        rollback_var(int tx_id_):tx_id(tx_id_){}
     };
 
     marshall &

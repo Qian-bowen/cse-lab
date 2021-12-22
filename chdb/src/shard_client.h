@@ -7,6 +7,7 @@ public:
     value_entry() {}
 
     value_entry(const value_entry &entry) : value(entry.value) {}
+    value_entry(int value_) : value(value_) {}
 
     int value;
 };
@@ -87,5 +88,8 @@ public:
     std::vector<std::map<int, value_entry>> store;
     int primary_replica = 0;
     int replica_num = 5;
+
+    std::vector<int> put_log;
+    bool read_only=true;
 
 };

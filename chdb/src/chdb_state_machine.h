@@ -65,4 +65,6 @@ public:
     // Apply the snapshot to the state mahine.
     // In Chdb, you don't need to implement this function
     virtual void apply_snapshot(const std::vector<char> &) {}
+
+    std::map<int,chdb_command> store;
 };
