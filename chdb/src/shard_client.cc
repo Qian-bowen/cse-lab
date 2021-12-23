@@ -9,7 +9,7 @@ int shard_client::put(chdb_protocol::operation_var var, int &r) {
     {
         mp[var.key]=value_entry(var.value);
     }
-    std::cout<<"put:"<<var.key<<" value:"<<get_store()[var.key].value<<std::endl;
+    // std::cout<<"put:"<<var.key<<" value:"<<get_store()[var.key].value<<std::endl;
     put_log.push_back(var.key);
     read_only=false;
     return 0;
@@ -20,7 +20,7 @@ int shard_client::get(chdb_protocol::operation_var var, int &r) {
     if(get_store().find(var.key)!=get_store().end())
     {
         r=(*get_store().find(var.key)).second.value;
-        std::cout<<"get:"<<var.key<<" value:"<<r<<std::endl;
+        // std::cout<<"get:"<<var.key<<" value:"<<r<<std::endl;
     }
     else
     {

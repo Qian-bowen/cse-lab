@@ -3,6 +3,8 @@
 
 #include "common.h"
 #include "shard_client.h"
+#include <unordered_map>
+#include <list>
 
 
 using shard_dispatch = int (*)(int key, int shard_num);
@@ -68,6 +70,32 @@ public:
 };
 
 
+
+// lock manager of db
+class lock_manager{
+private:
+    std::unordered_map<int,std::list<int>> lock_table; // key-> list of tx_id
+    std::unordered_map<int,std::list<int>> tx_set; // tx_id -> list of key waiting or already lock
+    std::mutex latch; // lock of manager
+
+    bool compatiable(int key,int tx_id);
+
+public:
+    bool lock_request(int key,int tx_id); // if grant request, return mtx
+    void unlock_request(int key,int tx_id);
+    void abort_all(int tx_id);
+
+    // variable for notify
+    std::condition_variable condVar;
+
+    struct tx_notify{
+        int tx_id_g=-1;
+        std::mutex mtx;
+    };
+    tx_notify tx_ntf;
+    std::mutex cv_m;
+};
+
 /*
  * chdb: One KV storage
  * */
@@ -132,6 +160,9 @@ public:
     std::mutex tx_id_mtx;
 
     std::mutex mtx;
+
+    lock_manager lm;
+    // std::unordered_map<std::pair<int,int>,std::condition_variable> cv_set; // (key, tx_id) -> cv
 
 private:
     static int default_dispatch(const int key, int shard_num) {

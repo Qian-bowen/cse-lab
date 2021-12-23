@@ -9,13 +9,14 @@
 
 /* Macro for lab4 */
 #define RAFT_GROUP 1            /* Use raft group for view server. Enable it in part2 */
-#define BIG_LOCK 1              /* Use big lock. Please disable it to pass the last 3 (bonus) testcases */
+#define BIG_LOCK 0              /* Use big lock. Please disable it to pass the last 3 (bonus) testcases */
 
 #include "../../raft_test_utils.h"
 
 /* Other macros */
 #define CHDB_PORT 8041
 
+#define DEBUG 1
 
 /**
  * Log entry for logging

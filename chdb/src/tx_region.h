@@ -1,5 +1,5 @@
 #include "ch_db.h"
-
+#include <set>
 
 /*
  * tx_region: chdb KV client which supports transaction concurrency control.
@@ -68,5 +68,8 @@ private:
 
     chdb *db;
     const int tx_id;
+
+    std::list<int> access_order;
+    std::set<int> keys_set;
 
 };
